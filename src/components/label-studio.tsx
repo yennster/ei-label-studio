@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import type { LSTask } from "@/lib/types";
@@ -14,7 +14,9 @@ import type { LSTask } from "@/lib/types";
 
 interface LabelStudioProps {
   config: string;
-  task: LSTask;
+  /** Null while samples are still loading — the iframe mounts and warms the
+   *  Label Studio bundle, and we push the first task once it's ready. */
+  task: LSTask | null;
   onSubmit: (annotation: unknown) => void;
   onSkip?: () => void;
   /** Sample navigation forwarded from inside the iframe ([ and ] keys). */
@@ -32,8 +34,9 @@ export default function LabelStudio({ config, task, onSubmit, onSkip, onNav }: L
   themeRef.current = resolvedTheme;
 
   // Use a unique session token as a cache-buster so the iframe page reloads
-  // fresh on mount but stays constant while hot-reloading samples.
-  const cacheBuster = useRef(Math.random().toString(36).substring(7));
+  // fresh on mount but stays constant while hot-reloading samples. Lazy state
+  // initializer → computed once per mount, not on every render.
+  const [cacheBuster] = useState(() => Math.random().toString(36).substring(7));
 
   useEffect(() => {
     if (ready.current) {
@@ -48,11 +51,15 @@ export default function LabelStudio({ config, task, onSubmit, onSkip, onNav }: L
   useEffect(() => {
     const origin = window.location.origin;
 
-    const send = () =>
+    const send = () => {
+      // Nothing to render until the first sample/task is ready; the iframe is
+      // already mounted and loading the bundle in the meantime.
+      if (!task) return;
       iframeRef.current?.contentWindow?.postMessage(
         { source: "ls-host", type: "render", config, task, theme: themeRef.current },
         origin,
       );
+    };
 
     function onMessage(e: MessageEvent) {
       if (e.origin !== origin) return;
@@ -83,7 +90,7 @@ export default function LabelStudio({ config, task, onSubmit, onSkip, onNav }: L
     <div className="h-full w-full bg-background">
       <iframe
         ref={iframeRef}
-        src={`/embed/labeler?theme=${resolvedTheme || "dark"}&v=${cacheBuster.current}`}
+        src={`/embed/labeler?theme=${resolvedTheme || "dark"}&v=${cacheBuster}`}
         title="Label Studio"
         className="h-full w-full min-w-0 border-0 bg-background"
       />

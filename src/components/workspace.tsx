@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { preload } from "react-dom";
 import type { ImperativePanelHandle } from "react-resizable-panels";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -41,6 +42,7 @@ import {
 import { SampleQueue } from "@/components/sample-queue";
 import { cn } from "@/lib/utils";
 import { useApp } from "@/lib/store";
+import { LS_VENDOR_CSS, LS_VENDOR_JS } from "@/lib/ls-vendor";
 import { getSamples, getProjects, relabel, setBoundingBoxes } from "@/lib/ei-client";
 import { parsePreset } from "@/lib/url-params";
 import { detectModality } from "@/lib/modality";
@@ -96,6 +98,14 @@ export function Workspace() {
   const inspectorRef = useRef<ImperativePanelHandle>(null);
   const didAutoCollapse = useRef(false);
   const [inspectorCollapsed, setInspectorCollapsed] = useState(false);
+
+  // Warm the large vendored Label Studio bundle as soon as the workspace mounts,
+  // so its download overlaps the samples fetch instead of starting only once the
+  // iframe has booted. The iframe requests the very same URLs (cache hit).
+  useEffect(() => {
+    preload(LS_VENDOR_JS, { as: "script" });
+    preload(LS_VENDOR_CSS, { as: "style" });
+  }, []);
 
   // On narrow screens the editor + two side panels don't fit, so start with the
   // inspector collapsed (its info is also shown inside the editor). Runs once,
@@ -427,17 +437,24 @@ export function Workspace() {
           </div>
         </div>
         <div className="relative min-h-0 flex-1 min-w-0 overflow-hidden">
-          {lsTask ? (
-            <LabelStudio
-              config={config}
-              task={lsTask}
-              onSubmit={handleSubmit}
-              onSkip={() => goTo(activeIndex + 1)}
-              onNav={(dir) => goTo(activeIndex + dir)}
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center text-muted-foreground">
-              {loading ? "" : "Select a sample to begin."}
+          {/* The canvas mounts immediately so the bundle downloads while samples
+              load; the first task is pushed in once it's ready. */}
+          <LabelStudio
+            config={config}
+            task={lsTask}
+            onSubmit={handleSubmit}
+            onSkip={() => goTo(activeIndex + 1)}
+            onNav={(dir) => goTo(activeIndex + dir)}
+          />
+          {!lsTask && (
+            <div className="absolute inset-0 flex items-center justify-center gap-2 bg-background text-muted-foreground">
+              {loading ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" /> Loading canvas…
+                </>
+              ) : (
+                "Select a sample to begin."
+              )}
             </div>
           )}
         </div>

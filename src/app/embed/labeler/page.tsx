@@ -1,6 +1,12 @@
 "use client";
 
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-function-type --
+   This file monkey-patches DOM prototypes (scrollIntoView, scrollTo, focus, …)
+   to suppress all scrolling inside the Label Studio iframe. Prototype patching
+   genuinely needs `any` / `Function` types here; they're scoped to this file. */
+
 import { useEffect, useRef } from "react";
+import { LS_VENDOR_CSS, LS_VENDOR_JS } from "@/lib/ls-vendor";
 import type { LSTask } from "@/lib/types";
 
 /*
@@ -29,11 +35,11 @@ function loadLabelStudio(): Promise<LSConstructor> {
       const link = document.createElement("link");
       link.id = "ls-css";
       link.rel = "stylesheet";
-      link.href = "/vendor/label-studio/main.css";
+      link.href = LS_VENDOR_CSS;
       document.head.appendChild(link);
     }
     const script = document.createElement("script");
-    script.src = "/vendor/label-studio/main.js";
+    script.src = LS_VENDOR_JS;
     script.async = true;
     script.onload = () =>
       window.LabelStudio ? resolve(window.LabelStudio) : reject(new Error("global missing"));
@@ -110,6 +116,18 @@ const LS_THEME = `
   height: 100% !important;
   max-height: 100% !important;
   min-height: 0 !important;
+  /* CLOSE THE GAP BELOW THE LABELS ROW.
+     LS ships .lsf-main-view with justify-content: space-between. Because we
+     force the main view to fill the iframe (height:100%), a short annotation
+     (just the labels chips + a small object like coffee/lamp) gets pinned to
+     the top while the sticky infobar is pushed to the bottom, leaving a large
+     dead vertical gap between the labels and the section/divider below.
+     Stacking from the top removes that oversized gap; the infobar is
+     position:sticky; bottom:0, so it still pins to the bottom on its own.
+     Scoped to .lsf-main-view only, so the canvas image area, timeseries plot,
+     bounding-box layout (all inside __annotation) and the sidebar (a separate
+     grid column) are untouched. */
+  justify-content: flex-start !important;
 }
 
 /* NARROW VIEWPORTS: Stack canvas and sidebar vertically */
@@ -809,6 +827,14 @@ export default function LabelerEmbed() {
 
     // Inject the theme stylesheet on mount so it is active before Label Studio builds its DOM
     injectTheme();
+
+    // Start downloading + parsing the (large) Label Studio bundle right away,
+    // overlapping the host's render handshake and the samples fetch instead of
+    // waiting for the first "render" message. Idempotent — render() reuses the
+    // same in-flight promise, so this only warms the global ahead of time.
+    void loadLabelStudio().catch(() => {
+      /* a real failure is surfaced when render() is actually attempted */
+    });
 
     function render(config: string, task: LSTask) {
       loadLabelStudio()
