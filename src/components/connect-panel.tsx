@@ -140,7 +140,7 @@ export function ConnectPanel() {
     const p = projects[0];
     return (
       <Card className="w-full overflow-hidden">
-        <CardContent className="space-y-5 p-5">
+        <CardContent className="space-y-4 p-5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm font-medium">
               <span className="relative flex size-2">
@@ -154,7 +154,7 @@ export function ConnectPanel() {
             </Button>
           </div>
 
-          <div className="flex items-center gap-4 rounded-lg border border-border bg-secondary/40 p-4">
+          <div className="flex items-center gap-4 rounded-lg border border-border bg-secondary/40 px-4 py-3">
             <Boxes className="size-8 shrink-0 text-primary" />
             <div className="min-w-0 flex-1 space-y-1">
               <div className="flex items-center gap-2">
