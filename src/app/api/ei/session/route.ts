@@ -24,17 +24,11 @@ export async function POST(req: Request) {
   }
 
   const apiKey = body.apiKey?.trim();
-  const projectId = Number(body.projectId);
+  let projectId = Number(body.projectId);
 
   if (!apiKey || !/^ei_/.test(apiKey)) {
     return NextResponse.json(
       { success: false, error: "An Edge Impulse API key (starts with ei_) is required." },
-      { status: 400 },
-    );
-  }
-  if (!Number.isFinite(projectId) || projectId < 1) {
-    return NextResponse.json(
-      { success: false, error: "A valid numeric project ID is required." },
       { status: 400 },
     );
   }
@@ -45,6 +39,26 @@ export async function POST(req: Request) {
     studioHost: body.studioHost?.trim() || undefined,
     ingestionHost: body.ingestionHost?.trim() || undefined,
   };
+
+  // A project API key is scoped to one project, so the ID is optional — when
+  // it's missing, resolve it from the key itself.
+  if (!Number.isFinite(projectId) || projectId < 1) {
+    const list = await studioFetch<{ projects: EIProject[] }>(session, "/projects");
+    const first = list.data?.projects?.[0];
+    if (!list.ok || !first) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            list.error ||
+            "Couldn't determine a project from that API key. Add a project ID, or check the key.",
+        },
+        { status: list.status === 0 ? 502 : list.status || 401 },
+      );
+    }
+    projectId = first.id;
+    session.projectId = projectId;
+  }
 
   // Validate the key + project by fetching project info.
   const result = await studioFetch<{ project: EIProject }>(session, `/${projectId}`);

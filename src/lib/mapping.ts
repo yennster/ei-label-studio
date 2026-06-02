@@ -1,4 +1,4 @@
-import type { EISample, LabelTask, LSTask, LSPrediction } from "./types";
+import type { EISample, LabelTask, LSTask, LSPrediction, LSResult } from "./types";
 
 /** Build the media proxy URL Label Studio fetches (same-origin, cookie-authed). */
 export function mediaUrl(projectId: number, sampleId: number, kind: string): string {
@@ -16,6 +16,7 @@ export function sampleToTask(
 ): LSTask {
   const data: Record<string, string> = {};
   let predictions: LSPrediction[] | undefined;
+  let annotations: unknown[] = [];
 
   if (task === "classify" || task === "detect") {
     data.image = mediaUrl(projectId, sample.id, "image");
@@ -25,48 +26,39 @@ export function sampleToTask(
     data.timeseries = mediaUrl(projectId, sample.id, "timeseries");
   }
 
-  // Pre-annotation from the existing EI label.
-  if (sample.label && sample.label !== "unlabeled") {
-    if (task === "classify" || task === "audio") {
-      predictions = [
-        {
-          model_version: "edge-impulse",
-          result: [
-            {
-              from_name: "label",
-              to_name: "media",
-              type: "choices",
-              value: { choices: [sample.label] },
-            },
-          ],
-        },
+  const hasLabel = sample.label && sample.label !== "unlabeled";
+
+  if (task === "classify" || task === "audio") {
+    // Seed the existing label as an editable annotation so the sample opens
+    // ready to confirm or correct, with a visible Submit/Update button.
+    if (hasLabel) {
+      const result: LSResult[] = [
+        { from_name: "label", to_name: "media", type: "choices", value: { choices: [sample.label] } },
       ];
-    } else if (task === "detect" && sample.boundingBoxes?.length) {
-      predictions = [
-        {
-          model_version: "edge-impulse",
-          result: sample.boundingBoxes.map((b) => ({
-            from_name: "label",
-            to_name: "media",
-            type: "rectanglelabels",
-            // EI boxes are in pixels; LS rectangles use percentages, filled at
-            // mount time once natural dimensions are known. We pass raw px in a
-            // side channel the component can normalize if needed.
-            value: {
-              x: b.x,
-              y: b.y,
-              width: b.width,
-              height: b.height,
-              rotation: 0,
-              rectanglelabels: [b.label],
-            },
-          })),
-        },
-      ];
+      annotations = [{ result }];
     }
+  } else if (task === "detect" && sample.boundingBoxes?.length) {
+    predictions = [
+      {
+        model_version: "edge-impulse",
+        result: sample.boundingBoxes.map((b) => ({
+          from_name: "label",
+          to_name: "media",
+          type: "rectanglelabels",
+          value: {
+            x: b.x,
+            y: b.y,
+            width: b.width,
+            height: b.height,
+            rotation: 0,
+            rectanglelabels: [b.label],
+          },
+        })),
+      },
+    ];
   }
 
-  return { id: sample.id, data, predictions, annotations: [] };
+  return { id: sample.id, data, predictions, annotations };
 }
 
 /**

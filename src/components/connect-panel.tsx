@@ -66,24 +66,24 @@ export function ConnectPanel() {
         setChecking(false);
       }
 
-      if (preset.apiKey && preset.projectId && !autoConnected.current) {
+      if (preset.apiKey && !autoConnected.current) {
         autoConnected.current = true;
-        void doConnect(preset.apiKey, String(preset.projectId), preset.studioHost, preset.ingestionHost);
+        void doConnect(preset.apiKey, preset.projectId ? String(preset.projectId) : "", preset.studioHost, preset.ingestionHost);
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function doConnect(key: string, pid: string, sHost?: string, iHost?: string) {
-    if (!key.trim() || !pid.trim()) {
-      toast.error("Enter your API key and project ID.");
+    if (!key.trim()) {
+      toast.error("Enter your Edge Impulse API key.");
       return;
     }
     setBusy(true);
     try {
       const { project } = await connect({
         apiKey: key.trim(),
-        projectId: Number(pid),
+        projectId: pid.trim() ? Number(pid) : undefined,
         studioHost: sHost?.trim() || undefined,
         ingestionHost: iHost?.trim() || undefined,
       });
@@ -189,11 +189,14 @@ export function ConnectPanel() {
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="projectId">Project ID</Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="projectId">Project ID</Label>
+            <span className="text-xs text-muted-foreground">optional · auto-detected</span>
+          </div>
           <Input
             id="projectId"
             inputMode="numeric"
-            placeholder="123456"
+            placeholder="Detected from your key"
             value={projectId}
             onChange={(e) => setProjectId(e.target.value.replace(/[^0-9]/g, ""))}
             className="font-mono"

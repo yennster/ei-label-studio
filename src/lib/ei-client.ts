@@ -19,7 +19,8 @@ async function jsonOrThrow<T>(res: Response): Promise<T> {
 
 export interface ConnectInput {
   apiKey: string;
-  projectId: number;
+  /** Optional — resolved from the key server-side when omitted. */
+  projectId?: number;
   studioHost?: string;
   ingestionHost?: string;
 }

@@ -4,53 +4,11 @@ import { useEffect, useRef } from "react";
 import type { LSTask } from "@/lib/types";
 
 /*
- * The Label Studio Frontend ships as a self-contained UMD bundle that exposes a
- * `LabelStudio` global. We vendor it under /public/vendor/label-studio (pinned
- * to the last version that publishes a built bundle) and load it on demand —
- * this keeps the 2 MB editor out of our app bundle and out of SSR entirely.
+ * Host for the isolated Label Studio iframe (/embed/labeler). Keeping the
+ * editor in its own document prevents its global stylesheet from leaking into
+ * the app. Config + task are pushed in via postMessage; annotations come back
+ * the same way.
  */
-
-interface LSInstance {
-  destroy?: () => void;
-}
-type LSConstructor = new (root: HTMLElement, options: Record<string, unknown>) => LSInstance;
-
-declare global {
-  interface Window {
-    LabelStudio?: LSConstructor;
-  }
-}
-
-let loaderPromise: Promise<LSConstructor> | null = null;
-
-function loadLabelStudio(): Promise<LSConstructor> {
-  if (typeof window === "undefined") return Promise.reject(new Error("no window"));
-  if (window.LabelStudio) return Promise.resolve(window.LabelStudio);
-  if (loaderPromise) return loaderPromise;
-
-  loaderPromise = new Promise<LSConstructor>((resolve, reject) => {
-    if (!document.getElementById("ls-css")) {
-      const link = document.createElement("link");
-      link.id = "ls-css";
-      link.rel = "stylesheet";
-      link.href = "/vendor/label-studio/main.css";
-      document.head.appendChild(link);
-    }
-    const script = document.createElement("script");
-    script.src = "/vendor/label-studio/main.js";
-    script.async = true;
-    script.onload = () =>
-      window.LabelStudio
-        ? resolve(window.LabelStudio)
-        : reject(new Error("Label Studio global missing"));
-    script.onerror = () => {
-      loaderPromise = null;
-      reject(new Error("Failed to load the Label Studio bundle"));
-    };
-    document.body.appendChild(script);
-  });
-  return loaderPromise;
-}
 
 interface LabelStudioProps {
   config: string;
@@ -60,64 +18,47 @@ interface LabelStudioProps {
 }
 
 export default function LabelStudio({ config, task, onSubmit, onSkip }: LabelStudioProps) {
-  const rootRef = useRef<HTMLDivElement>(null);
-  const instanceRef = useRef<LSInstance | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const ready = useRef(false);
   const handlers = useRef({ onSubmit, onSkip });
   handlers.current = { onSubmit, onSkip };
 
   useEffect(() => {
-    let cancelled = false;
+    const origin = window.location.origin;
 
-    loadLabelStudio()
-      .then((LabelStudioCtor) => {
-        if (cancelled || !rootRef.current) return;
-        instanceRef.current?.destroy?.();
-        rootRef.current.innerHTML = "";
+    const send = () =>
+      iframeRef.current?.contentWindow?.postMessage(
+        { source: "ls-host", type: "render", config, task },
+        origin,
+      );
 
-        instanceRef.current = new LabelStudioCtor(rootRef.current, {
-          config,
-          task,
-          interfaces: [
-            "panel",
-            "update",
-            "submit",
-            "skip",
-            "controls",
-            "infobar",
-            "topbar",
-            "instruction",
-            "side-column",
-            "annotations:current",
-          ],
-          user: { pk: 1, firstName: "Labeler" },
-          onSubmitAnnotation: (_ls: unknown, annotation: unknown) =>
-            handlers.current.onSubmit(serializeAnnotation(annotation)),
-          onUpdateAnnotation: (_ls: unknown, annotation: unknown) =>
-            handlers.current.onSubmit(serializeAnnotation(annotation)),
-          onSkipTask: () => handlers.current.onSkip?.(),
-        });
-      })
-      .catch(() => {
-        if (rootRef.current && !cancelled) {
-          rootRef.current.innerHTML =
-            '<div style="padding:2rem;text-align:center;color:#888">Could not load the labeling canvas.</div>';
-        }
-      });
+    function onMessage(e: MessageEvent) {
+      if (e.origin !== origin) return;
+      const d = e.data;
+      if (d?.source !== "ls-embed") return;
+      if (d.type === "ready") {
+        ready.current = true;
+        send();
+      } else if (d.type === "submit") {
+        handlers.current.onSubmit(d.annotation);
+      } else if (d.type === "skip") {
+        handlers.current.onSkip?.();
+      }
+    }
 
-    return () => {
-      cancelled = true;
-      instanceRef.current?.destroy?.();
-      instanceRef.current = null;
-    };
+    window.addEventListener("message", onMessage);
+    // If the iframe is already up (config/task changed), push the new sample.
+    if (ready.current) send();
+
+    return () => window.removeEventListener("message", onMessage);
   }, [config, task]);
 
-  return <div ref={rootRef} className="ls-root h-full w-full" />;
-}
-
-function serializeAnnotation(annotation: unknown): unknown {
-  const a = annotation as { serializeAnnotation?: () => unknown };
-  if (typeof a?.serializeAnnotation === "function") {
-    return { result: a.serializeAnnotation() };
-  }
-  return annotation;
+  return (
+    <iframe
+      ref={iframeRef}
+      src="/embed/labeler"
+      title="Label Studio"
+      className="h-full w-full border-0 bg-white"
+    />
+  );
 }
