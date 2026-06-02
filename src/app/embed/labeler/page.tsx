@@ -298,11 +298,38 @@ html.unicorn .ls-root .ant-card-body,
 html.dark .ls-root .ant-list,
 html.unicorn .ls-root .ant-list,
 html.dark .ls-root .ant-list-item,
-html.unicorn .ls-root .ant-list-item {
+html.unicorn .ls-root .ant-list-item,
+html.dark .ls-root [class*="lstitem--"],
+html.unicorn .ls-root [class*="lstitem--"] {
   background-color: transparent !important;
   background: transparent !important;
   border-color: var(--border) !important;
   color: var(--foreground) !important;
+}
+
+/* Ant Design Tree overrides */
+html.dark .ls-root .ant-tree,
+html.unicorn .ls-root .ant-tree,
+html.dark .ls-root .ant-tree-list,
+html.unicorn .ls-root .ant-tree-list,
+html.dark .ls-root .ant-tree-list-holder,
+html.unicorn .ls-root .ant-tree-list-holder,
+html.dark .ls-root .ant-tree-list-holder-inner,
+html.unicorn .ls-root .ant-tree-list-holder-inner,
+html.dark .ls-root .ant-tree-treenode,
+html.unicorn .ls-root .ant-tree-treenode,
+html.dark .ls-root .ant-tree-node-content-wrapper,
+html.unicorn .ls-root .ant-tree-node-content-wrapper,
+html.dark .ls-root .ant-tree-title,
+html.unicorn .ls-root .ant-tree-title {
+  background-color: transparent !important;
+  background: transparent !important;
+  color: var(--foreground) !important;
+}
+
+html.dark .ls-root .ant-tree-node-content-wrapper:hover,
+html.unicorn .ls-root .ant-tree-node-content-wrapper:hover {
+  background-color: var(--accent) !important;
 }
 
 html.dark .ls-root .ant-tabs-tab-btn,
@@ -316,6 +343,28 @@ html.unicorn .ls-root .ant-tabs-tab-active .ant-tabs-tab-btn {
 
 html.dark .ls-root .ant-checkbox-wrapper,
 html.unicorn .ls-root .ant-checkbox-wrapper {
+  color: var(--foreground) !important;
+}
+
+/* Radio group tab-style buttons and sort headers */
+html.dark .ls-root .lsf-radio-group__button,
+html.unicorn .ls-root .lsf-radio-group__button {
+  background-color: var(--secondary) !important;
+  color: var(--muted-foreground) !important;
+  border-color: var(--border) !important;
+}
+html.dark .ls-root .lsf-radio-group__button_checked,
+html.unicorn .ls-root .lsf-radio-group__button_checked {
+  background-color: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+}
+html.dark .ls-root .lsf-entities__counter,
+html.unicorn .ls-root .lsf-entities__counter {
+  color: inherit !important;
+  background: transparent !important;
+}
+html.dark .ls-root .lsf-entities__sort,
+html.unicorn .ls-root .lsf-entities__sort {
   color: var(--foreground) !important;
 }
 
@@ -457,16 +506,6 @@ export default function LabelerEmbed() {
             onSkipTask: () => post("skip"),
           });
           injectTheme();
-          setTimeout(() => {
-            if (rootRef.current) {
-              const rootHtml = rootRef.current.innerHTML || "";
-              fetch("/api/debug-dom", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ html: rootHtml }),
-              }).catch(console.error);
-            }
-          }, 3000);
         })
         .catch((e) => {
           post("error", e.message || "Failed to load Label Studio bundles");
