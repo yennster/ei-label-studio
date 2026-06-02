@@ -12,7 +12,7 @@ case-insensitive, and anything invalid is silently ignored.
 | Parameter | Alias | Values | Description |
 |---|---|---|---|
 | `apiKey` | | `ei_…` | Edge Impulse API key. Used to open a session, then stripped from the address bar. |
-| `project` | `eiProject` | int ≥ 1 | Project ID to connect to. |
+| `project` | `eiProject` | int ≥ 1 | Project ID to connect to. Not required when `apiKey` is provided (API keys are scoped to a single project). |
 | `category` | | `training` · `testing` · `anomaly` | Which dataset split to load. |
 | `labels` | | comma-separated list | Filter the sample queue to these labels, e.g. `labels=dog,cat`. |
 | `task` | | `classify` · `detect` · `audio` · `timeseries` | Force a labeling template instead of auto-detecting per sample. |
@@ -30,26 +30,26 @@ case-insensitive, and anything invalid is silently ignored.
 ### Basic — open a project in one click
 
 ```
-https://label.jennyspeelman.dev/?apiKey=ei_abc123&project=123456
+https://label.jennyspeelman.dev/?apiKey=ei_abc123
 ```
 
-Connects to project `123456` using the provided API key. The key is stored in a
-secure, http-only cookie and removed from the address bar on load.
+Connects using the API key (which is scoped to a single project). The key is
+stored in a secure, http-only cookie and removed from the address bar on load.
 
 ### Training set with audio template
 
 ```
-https://label.jennyspeelman.dev/?project=123456&category=training&task=audio&autoAdvance=1
+https://label.jennyspeelman.dev/?apiKey=ei_abc123&category=training&task=audio&autoAdvance=1
 ```
 
-Opens the workspace on project `123456`'s training set, with the
-audio-classification template and auto-advance on.
+Loads the training set with the audio-classification template and auto-advance
+on. You can also add `project=123456` if you want to be explicit.
 
 ### Embedding in an iframe
 
 ```html
 <iframe
-  src="https://label.jennyspeelman.dev/label?apiKey=ei_abc123&project=123456&embed=1&theme=dark"
+  src="https://label.jennyspeelman.dev/label?apiKey=ei_abc123&embed=1&theme=dark"
   width="100%"
   height="700"
   style="border: none;"
@@ -62,7 +62,7 @@ labeling canvas is shown. Combine with `theme` to match the host page.
 ### Unicorn mode 🦄
 
 ```
-https://label.jennyspeelman.dev/?project=123456&theme=unicorn
+https://label.jennyspeelman.dev/?apiKey=ei_abc123&theme=unicorn
 ```
 
 Activates the pastel-pink unicorn theme with rainbow accents and sparkle

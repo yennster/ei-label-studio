@@ -17,7 +17,7 @@ interface Param {
 
 const PARAMS: Param[] = [
   { name: "apiKey", type: "ei_…", desc: "Edge Impulse API key. Used to open a session, then stripped from the address bar." },
-  { name: "project", alias: "eiProject", type: "int ≥ 1", desc: "Project ID to connect to." },
+  { name: "project", alias: "eiProject", type: "int ≥ 1", desc: "Project ID to connect to. Not required when apiKey is provided (API keys are scoped to a single project)." },
   { name: "category", type: "training | testing | anomaly", desc: "Which dataset split to load." },
   { name: "labels", type: "comma list", desc: "Filter the sample queue to these labels, e.g. labels=dog,cat." },
   { name: "task", type: "classify | detect | audio | timeseries", desc: "Force a labeling template instead of auto-detecting per sample." },
@@ -79,12 +79,12 @@ export default function DocsPage() {
         <div className="mt-8 space-y-3">
           <h2 className="text-lg font-medium">Example</h2>
           <pre className="overflow-x-auto rounded-lg border border-border bg-card/60 p-4 text-xs">
-            <code>{`https://label.jennyspeelman.dev/?project=123456&category=training&task=audio&autoAdvance=1`}</code>
+            <code>{`https://label.jennyspeelman.dev/?apiKey=ei_abc123&category=training&task=audio&autoAdvance=1`}</code>
           </pre>
           <p className="text-sm text-muted-foreground">
-            Opens the workspace on project 123456&apos;s training set, with the audio-classification
-            template and auto-advance on. Add <code className="rounded bg-secondary px-1">apiKey=ei_…</code>{" "}
-            to connect in one click.
+            Connects using the API key (which is scoped to a single project), loads the training set
+            with the audio-classification template and auto-advance on. The key is stored in a
+            secure http-only cookie and removed from the URL on load.
           </p>
         </div>
 
