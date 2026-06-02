@@ -135,11 +135,12 @@ export function ConnectPanel() {
     );
   }
 
-  // Connected → project picker.
+  // Connected → single project (API keys are scoped to one project).
   if (projects?.length) {
+    const p = projects[0];
     return (
       <Card className="w-full overflow-hidden">
-        <CardContent className="space-y-4 p-5">
+        <CardContent className="space-y-5 p-5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm font-medium">
               <span className="relative flex size-2">
@@ -153,39 +154,29 @@ export function ConnectPanel() {
             </Button>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            {projects.map((p) => (
-              <button
-                key={p.id}
-                onClick={() => router.push("/label")}
-                className="group flex flex-col gap-2 rounded-lg border border-border bg-secondary/40 p-4 text-left transition hover:border-primary/60 hover:bg-secondary"
-              >
-                <div className="flex items-center justify-between">
-                  <Boxes className="size-5 text-primary" />
-                  <Badge variant="secondary" className="font-mono text-[10px]">
-                    #{p.id}
-                  </Badge>
-                </div>
-                <div className="font-medium leading-tight">{p.name}</div>
+          <div className="flex items-center gap-4 rounded-lg border border-border bg-secondary/40 p-4">
+            <Boxes className="size-8 shrink-0 text-primary" />
+            <div className="min-w-0 flex-1 space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="truncate font-medium leading-tight">{p.name}</span>
+                <Badge variant="secondary" className="shrink-0 font-mono text-[10px]">
+                  #{p.id}
+                </Badge>
+              </div>
+              <div className="flex items-center gap-2">
                 <Badge className="w-fit bg-primary/15 text-primary hover:bg-primary/15">
                   {labelingMethodLabel(p.labelingMethod)}
                 </Badge>
                 {p.ownerName && (
-                  <div className="text-xs text-muted-foreground">{p.ownerName}</div>
+                  <span className="truncate text-xs text-muted-foreground">{p.ownerName}</span>
                 )}
-                <div className="mt-1 flex items-center gap-1 text-xs font-medium text-primary opacity-0 transition group-hover:opacity-100">
-                  Open workspace <ArrowRight className="size-3" />
-                </div>
-              </button>
-            ))}
+              </div>
+            </div>
           </div>
 
-          <Button className="w-full" onClick={() => router.push("/label")}>
+          <Button className="w-full" size="lg" onClick={() => router.push("/label")}>
             Open labeling workspace <ArrowRight className="size-4" />
           </Button>
-          <p className="text-center text-xs text-muted-foreground">
-            An API key is scoped to one project. Add another key to switch projects.
-          </p>
         </CardContent>
       </Card>
     );

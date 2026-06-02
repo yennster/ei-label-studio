@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 
 export function LogoMark({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 -1 32 34" fill="none" className={cn("size-7", className)} aria-hidden>
+    <svg viewBox="0 0 32 32" fill="none" className={cn("size-7", className)} aria-hidden>
       <defs>
         <linearGradient id="lm" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
           <stop stopColor="oklch(0.66 0.2 275)" />
@@ -28,7 +28,7 @@ export function Wordmark({ className }: { className?: string }) {
   return (
     <span className={cn("inline-flex items-center gap-2 font-semibold tracking-tight", className)}>
       <LogoMark />
-      <span className="text-[15px]">
+      <span className="text-[15px] leading-none">
         EI<span className="text-muted-foreground"> · </span>Label Studio
       </span>
     </span>
