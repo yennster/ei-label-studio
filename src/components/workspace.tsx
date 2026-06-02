@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import {
+  Boxes,
   ChevronLeft,
   ChevronRight,
   Loader2,
@@ -30,7 +31,8 @@ import { SampleQueue } from "@/components/sample-queue";
 import { useApp } from "@/lib/store";
 import { getSamples, getProjects, relabel } from "@/lib/ei-client";
 import { parsePreset } from "@/lib/url-params";
-import { detectModality, defaultTaskForModality } from "@/lib/modality";
+import { detectModality } from "@/lib/modality";
+import { defaultTaskFor, projectTypeLabel } from "@/lib/project-type";
 import { buildLabelConfig, channelsForSample } from "@/lib/ls-config";
 import { sampleToTask, labelFromAnnotation } from "@/lib/mapping";
 import type { EICategory, LabelTask } from "@/lib/types";
@@ -132,8 +134,21 @@ export function Workspace() {
 
   const effectiveTask: LabelTask = useMemo(() => {
     if (forcedTask) return forcedTask;
-    return active ? defaultTaskForModality(detectModality(active)) : "classify";
-  }, [forcedTask, active]);
+    return active ? defaultTaskFor(detectModality(active), project?.labelingMethod) : "classify";
+  }, [forcedTask, active, project]);
+
+  // Dominant modality across the loaded set, for the project-type label.
+  const projectModality = useMemo(() => {
+    if (!samples.length) return undefined;
+    const counts: Record<string, number> = {};
+    for (const s of samples) {
+      const m = detectModality(s);
+      counts[m] = (counts[m] ?? 0) + 1;
+    }
+    return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] as
+      | ReturnType<typeof detectModality>
+      | undefined;
+  }, [samples]);
 
   // Class label set = distinct dataset labels ∪ custom labels ∪ active label.
   const labelSet = useMemo(() => {
@@ -300,11 +315,17 @@ export function Workspace() {
               <ChevronRight className="size-4" />
             </Button>
           </div>
-          {active && <span className="truncate font-mono text-xs text-muted-foreground">{active.filename}</span>}
-          <Badge variant="secondary" className="gap-1">
-            <Tag className="size-3" />
-            {TASK_LABELS[effectiveTask]}
-          </Badge>
+          {active && <span className="hidden truncate font-mono text-xs text-muted-foreground sm:inline">{active.filename}</span>}
+          <div className="flex items-center gap-2">
+            <Badge className="gap-1 bg-primary/15 text-primary hover:bg-primary/15">
+              <Boxes className="size-3" />
+              {projectTypeLabel(project, projectModality)}
+            </Badge>
+            <Badge variant="secondary" className="hidden gap-1 md:inline-flex">
+              <Tag className="size-3" />
+              {TASK_LABELS[effectiveTask]}
+            </Badge>
+          </div>
         </div>
         <div className="relative min-h-0 flex-1">
           {lsTask ? (
@@ -319,9 +340,14 @@ export function Workspace() {
 
       {/* Right: inspector */}
       <aside className="hidden min-h-0 flex-col gap-4 overflow-y-auto border-l border-border/60 p-4 lg:flex">
-        <div>
-          <h2 className="text-sm font-semibold">{project.name}</h2>
-          <p className="font-mono text-xs text-muted-foreground">project #{project.id}</p>
+        <div className="space-y-1.5">
+          <h2 className="text-sm font-semibold leading-tight">{project.name}</h2>
+          <div className="flex items-center gap-2">
+            <Badge className="bg-primary/15 text-primary hover:bg-primary/15">
+              {projectTypeLabel(project, projectModality)}
+            </Badge>
+            <span className="font-mono text-xs text-muted-foreground">#{project.id}</span>
+          </div>
         </div>
         <Separator />
 

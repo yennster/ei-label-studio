@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { connect, disconnect, getProjects } from "@/lib/ei-client";
+import { labelingMethodLabel } from "@/lib/project-type";
 import { parsePreset } from "@/lib/url-params";
 import { useApp } from "@/lib/store";
 import type { EIProject } from "@/lib/types";
@@ -147,6 +148,9 @@ export function ConnectPanel() {
                   </Badge>
                 </div>
                 <div className="font-medium leading-tight">{p.name}</div>
+                <Badge className="w-fit bg-primary/15 text-primary hover:bg-primary/15">
+                  {labelingMethodLabel(p.labelingMethod)}
+                </Badge>
                 {p.ownerName && (
                   <div className="text-xs text-muted-foreground">{p.ownerName}</div>
                 )}
@@ -182,51 +186,52 @@ export function ConnectPanel() {
               placeholder="ei_0a1b2c…"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") doConnect(apiKey, projectId, studioHost, ingestionHost);
+              }}
               className="pl-9 font-mono"
               autoComplete="off"
             />
           </div>
-        </div>
-
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="projectId">Project ID</Label>
-            <span className="text-xs text-muted-foreground">optional · auto-detected</span>
-          </div>
-          <Input
-            id="projectId"
-            inputMode="numeric"
-            placeholder="Detected from your key"
-            value={projectId}
-            onChange={(e) => setProjectId(e.target.value.replace(/[^0-9]/g, ""))}
-            className="font-mono"
-            onKeyDown={(e) => {
-              if (e.key === "Enter") doConnect(apiKey, projectId, studioHost, ingestionHost);
-            }}
-          />
+          <p className="text-xs text-muted-foreground">
+            Your project is detected automatically from the key.
+          </p>
         </div>
 
         {showAdvanced && (
-          <div className="grid gap-3 rounded-lg border border-dashed border-border p-3 sm:grid-cols-2">
+          <div className="space-y-3 rounded-lg border border-dashed border-border p-3">
             <div className="space-y-1.5">
-              <Label htmlFor="studioHost" className="text-xs">Studio host</Label>
+              <Label htmlFor="projectId" className="text-xs">Project ID override</Label>
               <Input
-                id="studioHost"
-                placeholder="studio.edgeimpulse.com"
-                value={studioHost}
-                onChange={(e) => setStudioHost(e.target.value)}
-                className="text-xs"
+                id="projectId"
+                inputMode="numeric"
+                placeholder="Auto-detected — leave blank"
+                value={projectId}
+                onChange={(e) => setProjectId(e.target.value.replace(/[^0-9]/g, ""))}
+                className="text-xs font-mono"
               />
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="ingestionHost" className="text-xs">Ingestion host</Label>
-              <Input
-                id="ingestionHost"
-                placeholder="ingestion.edgeimpulse.com"
-                value={ingestionHost}
-                onChange={(e) => setIngestionHost(e.target.value)}
-                className="text-xs"
-              />
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="studioHost" className="text-xs">Studio host</Label>
+                <Input
+                  id="studioHost"
+                  placeholder="studio.edgeimpulse.com"
+                  value={studioHost}
+                  onChange={(e) => setStudioHost(e.target.value)}
+                  className="text-xs"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="ingestionHost" className="text-xs">Ingestion host</Label>
+                <Input
+                  id="ingestionHost"
+                  placeholder="ingestion.edgeimpulse.com"
+                  value={ingestionHost}
+                  onChange={(e) => setIngestionHost(e.target.value)}
+                  className="text-xs"
+                />
+              </div>
             </div>
           </div>
         )}

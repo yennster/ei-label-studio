@@ -46,9 +46,9 @@ export default function Home() {
                   Label Studio × Edge Impulse
                 </Badge>
                 <h1 className="text-balance text-4xl font-semibold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
-                  Label your Edge Impulse data,{" "}
+                  Your Edge Impulse data,{" "}
                   <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                    beautifully.
+                    labeled and ready.
                   </span>
                 </h1>
                 <p className="max-w-xl text-pretty text-lg text-muted-foreground">
