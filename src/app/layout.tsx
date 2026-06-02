@@ -10,7 +10,7 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 export const metadata: Metadata = {
   title: "EI Label Studio — label your Edge Impulse data",
   description:
-    "A beautiful Label Studio wrapper for Edge Impulse. Pull samples from your project, label them, and push corrections straight back — driven by shareable URLs.",
+    "A Label Studio wrapper for Edge Impulse. Pull samples from your project, label them, and push corrections straight back — driven by shareable URLs.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

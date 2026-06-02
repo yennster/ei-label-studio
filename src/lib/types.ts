@@ -49,6 +49,7 @@ export interface EISample {
   deviceType?: string;
   boundingBoxes?: EIBoundingBox[];
   boundingBoxesType?: string;
+  imageDimensions?: { width: number; height: number };
   created?: string;
   isDisabled?: boolean;
   isProcessing?: boolean;
@@ -80,4 +81,8 @@ export interface LSResult {
   to_name: string;
   type: string;
   value: Record<string, unknown>;
+  /** Rectangle results carry the reference image size for %→px conversion. */
+  original_width?: number;
+  original_height?: number;
+  image_rotation?: number;
 }

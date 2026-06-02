@@ -1,4 +1,4 @@
-import type { EICategory, EIProject, EISample } from "./types";
+import type { EIBoundingBox, EICategory, EIProject, EISample } from "./types";
 
 /** Thin client over our same-origin /api/ei/* proxy. */
 
@@ -66,6 +66,18 @@ export async function relabel(sampleId: number, newLabel: string): Promise<void>
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ sampleId, newLabel }),
+  });
+  await jsonOrThrow(res);
+}
+
+export async function setBoundingBoxes(
+  sampleId: number,
+  boundingBoxes: EIBoundingBox[],
+): Promise<void> {
+  const res = await fetch("/api/ei/bounding-boxes", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sampleId, boundingBoxes }),
   });
   await jsonOrThrow(res);
 }

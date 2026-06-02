@@ -29,12 +29,12 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { SampleQueue } from "@/components/sample-queue";
 import { useApp } from "@/lib/store";
-import { getSamples, getProjects, relabel } from "@/lib/ei-client";
+import { getSamples, getProjects, relabel, setBoundingBoxes } from "@/lib/ei-client";
 import { parsePreset } from "@/lib/url-params";
 import { detectModality } from "@/lib/modality";
 import { defaultTaskFor, projectTypeLabel } from "@/lib/project-type";
 import { buildLabelConfig, channelsForSample } from "@/lib/ls-config";
-import { sampleToTask, labelFromAnnotation } from "@/lib/mapping";
+import { sampleToTask, labelFromAnnotation, boxesFromAnnotation } from "@/lib/mapping";
 import type { EICategory, LabelTask } from "@/lib/types";
 
 const LabelStudio = dynamic(() => import("@/components/label-studio"), {
@@ -181,37 +181,66 @@ export function Workspace() {
     [samples.length, setActiveIndex],
   );
 
+  const advance = useCallback(() => {
+    if (!autoAdvance) return;
+    const next = samples.findIndex((s, i) => i > activeIndex && !labeledIds.has(s.id));
+    goTo(next === -1 ? Math.min(activeIndex + 1, samples.length - 1) : next);
+  }, [autoAdvance, samples, activeIndex, labeledIds, goTo]);
+
   const handleSubmit = useCallback(
     async (annotation: unknown) => {
       if (!active) return;
-      const label = labelFromAnnotation(annotation);
-      if (!label) {
-        toast.error("Pick a class before submitting.");
-        return;
-      }
       setSubmitting(true);
       try {
+        if (effectiveTask === "detect") {
+          // Object detection: push the (edited) boxes back to EI as pixels.
+          const boxes = boxesFromAnnotation(annotation);
+          await setBoundingBoxes(active.id, boxes);
+          markLabeled(active.id, active.label);
+          setLabeledIds((prev) => new Set(prev).add(active.id));
+          toast.success(
+            boxes.length
+              ? `Saved ${boxes.length} box${boxes.length > 1 ? "es" : ""} to Edge Impulse`
+              : "Cleared all boxes in Edge Impulse",
+          );
+          advance();
+          return;
+        }
+
+        if (effectiveTask === "timeseries") {
+          const label = labelFromAnnotation(annotation);
+          if (!label) {
+            toast.error("Add a labeled segment before submitting.");
+            return;
+          }
+          await relabel(active.id, label);
+          markLabeled(active.id, label);
+          setLabeledIds((prev) => new Set(prev).add(active.id));
+          toast.success(`Sample label set to “${label}”`, {
+            description: "Per-segment labels aren't pushed back to EI yet.",
+          });
+          advance();
+          return;
+        }
+
+        // classify / audio
+        const label = labelFromAnnotation(annotation);
+        if (!label) {
+          toast.error("Pick a class before submitting.");
+          return;
+        }
         await relabel(active.id, label);
         markLabeled(active.id, label);
         setLabeledIds((prev) => new Set(prev).add(active.id));
-        if (effectiveTask === "detect" || effectiveTask === "timeseries") {
-          toast.success(`Sample label set to “${label}”`, {
-            description: "Region-level labels aren't pushed back to EI yet.",
-          });
-        } else {
-          toast.success(`Relabeled to “${label}”`);
-        }
-        if (autoAdvance) {
-          const next = samples.findIndex((s, i) => i > activeIndex && !labeledIds.has(s.id));
-          goTo(next === -1 ? Math.min(activeIndex + 1, samples.length - 1) : next);
-        }
+        toast.success(`Relabeled to “${label}”`);
+        advance();
       } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Relabel failed");
+        toast.error(e instanceof Error ? e.message : "Save failed");
       } finally {
         setSubmitting(false);
       }
     },
-    [active, effectiveTask, autoAdvance, samples, activeIndex, labeledIds, goTo, markLabeled],
+    [active, effectiveTask, advance, markLabeled],
   );
 
   // Embed mode hides the surrounding chrome for iframe use.

@@ -1,4 +1,4 @@
-import type { EISample, LabelTask, LSTask, LSPrediction, LSResult } from "./types";
+import type { EIBoundingBox, EISample, LabelTask, LSTask, LSPrediction, LSResult } from "./types";
 
 /** Build the media proxy URL Label Studio fetches (same-origin, cookie-authed). */
 export function mediaUrl(projectId: number, sampleId: number, kind: string): string {
@@ -37,28 +37,73 @@ export function sampleToTask(
       ];
       annotations = [{ result }];
     }
-  } else if (task === "detect" && sample.boundingBoxes?.length) {
-    predictions = [
-      {
-        model_version: "edge-impulse",
-        result: sample.boundingBoxes.map((b) => ({
-          from_name: "label",
-          to_name: "media",
-          type: "rectanglelabels",
-          value: {
-            x: b.x,
-            y: b.y,
-            width: b.width,
-            height: b.height,
-            rotation: 0,
-            rectanglelabels: [b.label],
-          },
-        })),
-      },
-    ];
+  } else if (task === "detect") {
+    // EI stores boxes as ABSOLUTE pixels; Label Studio expects PERCENTAGES of
+    // the image, with original_width/height as the reference. Seed them as an
+    // editable annotation so they render and can be adjusted.
+    const dims = sample.imageDimensions;
+    if (sample.boundingBoxes?.length && dims?.width && dims?.height) {
+      const result: LSResult[] = sample.boundingBoxes.map((b) => ({
+        from_name: "label",
+        to_name: "media",
+        type: "rectanglelabels",
+        original_width: dims.width,
+        original_height: dims.height,
+        image_rotation: 0,
+        value: {
+          x: (b.x / dims.width) * 100,
+          y: (b.y / dims.height) * 100,
+          width: (b.width / dims.width) * 100,
+          height: (b.height / dims.height) * 100,
+          rotation: 0,
+          rectanglelabels: [b.label],
+        },
+      }));
+      annotations = [{ result }];
+    }
   }
 
   return { id: sample.id, data, predictions, annotations };
+}
+
+/**
+ * Convert a submitted Label Studio rectangle annotation back into EI bounding
+ * boxes (absolute pixels), using each result's original_width/height.
+ */
+export function boxesFromAnnotation(annotation: unknown): EIBoundingBox[] {
+  const a = annotation as {
+    result?: Array<{
+      type?: string;
+      original_width?: number;
+      original_height?: number;
+      value?: {
+        x?: number;
+        y?: number;
+        width?: number;
+        height?: number;
+        rectanglelabels?: string[];
+        labels?: string[];
+      };
+    }>;
+  };
+  if (!a?.result) return [];
+  const boxes: EIBoundingBox[] = [];
+  for (const r of a.result) {
+    if (r.type !== "rectanglelabels" || !r.value) continue;
+    const ow = r.original_width ?? 0;
+    const oh = r.original_height ?? 0;
+    if (!ow || !oh) continue;
+    const label = r.value.rectanglelabels?.[0] ?? r.value.labels?.[0];
+    if (!label) continue;
+    boxes.push({
+      label,
+      x: Math.round(((r.value.x ?? 0) / 100) * ow),
+      y: Math.round(((r.value.y ?? 0) / 100) * oh),
+      width: Math.round(((r.value.width ?? 0) / 100) * ow),
+      height: Math.round(((r.value.height ?? 0) / 100) * oh),
+    });
+  }
+  return boxes;
 }
 
 /**
