@@ -225,6 +225,18 @@ const LS_THEME = `
   background-color: var(--background) !important;
 }
 
+html.dark .ls-root .lsf-tool,
+html.unicorn .ls-root .lsf-tool {
+  --text-color: var(--muted-foreground) !important;
+  --text-color-hover: var(--foreground) !important;
+}
+
+html.dark .ls-root .lsf-tool_active > .lsf-tool__icon,
+html.unicorn .ls-root .lsf-tool_active > .lsf-tool__icon {
+  background-color: var(--accent) !important;
+  box-shadow: none !important;
+}
+
 /* Sidebar and lists */
 html.dark .ls-root [class*="menu--"],
 html.unicorn .ls-root [class*="menu--"] {
@@ -281,6 +293,46 @@ html.dark .ls-root [class*="toolbar--"] *,
 html.unicorn .ls-root [class*="toolbar--"] * {
   color: var(--foreground) !important;
   border-color: var(--border) !important;
+}
+html.dark .ls-root .lsf-toolbar svg *,
+html.unicorn .ls-root .lsf-toolbar svg *,
+html.dark .ls-root [class*="toolbar--"] svg *,
+html.unicorn .ls-root [class*="toolbar--"] svg * {
+  fill: var(--foreground) !important;
+}
+
+/* Tooltip popovers and shortcut keys for toolbar in dark/unicorn themes */
+html.dark .ls-root .lsf-tool__tooltip-body,
+html.unicorn .ls-root .lsf-tool__tooltip-body {
+  background-color: var(--popover) !important;
+  color: var(--popover-foreground) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+html.dark .ls-root .lsf-tool__tooltip-body *,
+html.unicorn .ls-root .lsf-tool__tooltip-body * {
+  color: var(--popover-foreground) !important;
+}
+html.dark .ls-root .lsf-tool__key,
+html.unicorn .ls-root .lsf-tool__key {
+  background-color: var(--secondary) !important;
+  color: var(--secondary-foreground) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: none !important;
+}
+html.dark .ls-root .lsf-tool__key *,
+html.unicorn .ls-root .lsf-tool__key * {
+  color: var(--secondary-foreground) !important;
+}
+
+/* Ensure keyboard shortcut badges use a clean monospace font in all themes */
+.ls-root .lsf-tool__key,
+.ls-root .lsf-keys__key,
+.ls-root .lsf-tool__key *,
+.ls-root .lsf-keys__key * {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+  font-weight: 600 !important;
+  font-size: 11px !important;
 }
 
 /* Ant Design (antd) component theme overrides inside the iframe */
@@ -363,7 +415,7 @@ html.unicorn .ls-root .lsf-radio-group__button {
 html.dark .ls-root .lsf-radio-group__button_checked,
 html.unicorn .ls-root .lsf-radio-group__button_checked {
   background-color: var(--primary) !important;
-  color: var(--primary-foreground) !important;
+  color: #ffffff !important;
 }
 html.dark .ls-root .lsf-entities__counter,
 html.unicorn .ls-root .lsf-entities__counter {
@@ -379,6 +431,61 @@ html.unicorn .ls-root .lsf-entities__sort {
 html.dark .ls-root .lsf-label__text,
 html.dark .ls-root .lsf-label__hotkey {
   color: #ffffff !important;
+}
+
+/* Region list items description, counter, toggle eye, and bounding box icon overrides for dark/unicorn modes */
+html.dark .ls-root .lsf-region-item__desc,
+html.unicorn .ls-root .lsf-region-item__desc {
+  background-color: var(--background) !important;
+  border-color: var(--border) !important;
+  color: var(--foreground) !important;
+}
+html.dark .ls-root [class*="labels--"],
+html.unicorn .ls-root [class*="labels--"] {
+  color: var(--foreground) !important;
+}
+html.dark .ls-root .lsf-region-item__counter,
+html.unicorn .ls-root .lsf-region-item__counter {
+  color: var(--muted-foreground) !important;
+}
+html.dark .ls-root .lsf-region-item__toggle svg,
+html.unicorn .ls-root .lsf-region-item__toggle svg,
+html.dark .ls-root .lsf-region-item__collapse svg,
+html.unicorn .ls-root .lsf-region-item__collapse svg,
+html.dark .ls-root .lsf-entities__visibility svg,
+html.unicorn .ls-root .lsf-entities__visibility svg {
+  color: var(--foreground) !important;
+  opacity: 0.7 !important;
+}
+html.dark .ls-root .lsf-region-item__id svg,
+html.unicorn .ls-root .lsf-region-item__id svg {
+  color: var(--labelColor, var(--foreground)) !important;
+  opacity: 0.8 !important;
+}
+html.dark .ls-root .lsf-region-item__collapse,
+html.unicorn .ls-root .lsf-region-item__collapse {
+  opacity: 0.7 !important;
+}
+html.dark .ls-root .lsf-region-item__collapse:hover,
+html.unicorn .ls-root .lsf-region-item__collapse:hover {
+  opacity: 1 !important;
+}
+html.dark .ls-root .lsf-region-item__toggle svg *,
+html.unicorn .ls-root .lsf-region-item__toggle svg *,
+html.dark .ls-root .lsf-region-item__collapse svg *,
+html.unicorn .ls-root .lsf-region-item__collapse svg *,
+html.dark .ls-root .lsf-entities__visibility svg *,
+html.unicorn .ls-root .lsf-entities__visibility svg * {
+  stroke: var(--foreground) !important;
+  opacity: 1 !important;
+}
+html.dark .ls-root .lsf-region-item__toggle:hover svg,
+html.unicorn .ls-root .lsf-region-item__toggle:hover svg,
+html.dark .ls-root .lsf-region-item__collapse:hover svg,
+html.unicorn .ls-root .lsf-region-item__collapse:hover svg,
+html.dark .ls-root .lsf-entities__visibility:hover svg,
+html.unicorn .ls-root .lsf-entities__visibility:hover svg {
+  opacity: 1 !important;
 }
 
 /* Ant Design Dropdown Menu overrides for dark and unicorn themes */
@@ -494,8 +601,8 @@ function injectTheme() {
   if (!style) {
     style = document.createElement("style");
     style.id = "ls-theme";
-    style.textContent = LS_THEME;
   }
+  style.textContent = LS_THEME;
   document.head.appendChild(style);
 }
 
