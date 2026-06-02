@@ -235,10 +235,7 @@ const LS_THEME = `
 .lsf-history,
 .lsf-annotations,
 .lsf-sidebar,
-.lsf-empty-state,
-[class*="header--"],
-[class*="title--"],
-[class*="content--"] {
+.lsf-empty-state {
   background-color: var(--card) !important;
   color: var(--foreground) !important;
 }
@@ -253,16 +250,65 @@ const LS_THEME = `
   border-top: 1px solid var(--border) !important;
 }
 
-.lsf-label,
-.lsf-choice {
-  background-color: var(--secondary);
-  color: var(--secondary-foreground);
-  border: 1px solid var(--border);
+/* Ant Design (antd) component theme overrides inside the iframe */
+.dark .ant-tabs,
+.unicorn .ant-tabs,
+.dark .ant-tabs-nav,
+.unicorn .ant-tabs-nav,
+.dark .ant-tabs-tab,
+.unicorn .ant-tabs-tab,
+.dark .ant-tabs-content,
+.unicorn .ant-tabs-content,
+.dark .ant-tabs-tabpane,
+.unicorn .ant-tabs-tabpane,
+.dark .ant-tabs-content-holder,
+.unicorn .ant-tabs-content-holder,
+.dark .ant-card,
+.unicorn .ant-card,
+.dark .ant-card-body,
+.unicorn .ant-card-body,
+.dark .ant-list,
+.unicorn .ant-list,
+.dark .ant-list-item,
+.unicorn .ant-list-item {
+  background-color: transparent !important;
+  background: transparent !important;
+  border-color: var(--border) !important;
+  color: var(--foreground) !important;
 }
-.lsf-label:hover,
-.lsf-choice:hover {
-  background-color: var(--accent);
-  color: var(--accent-foreground);
+
+.dark .ant-tabs-tab-btn,
+.unicorn .ant-tabs-tab-btn {
+  color: var(--muted-foreground) !important;
+}
+.dark .ant-tabs-tab-active .ant-tabs-tab-btn,
+.unicorn .ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: var(--primary) !important;
+}
+
+.dark .ant-checkbox-wrapper,
+.unicorn .ant-checkbox-wrapper {
+  color: var(--foreground) !important;
+}
+
+/* Label badges / choice buttons */
+.dark .lsf-label,
+.unicorn .lsf-label,
+.dark .lsf-choice,
+.unicorn .lsf-choice {
+  background-color: var(--secondary);
+  border-color: var(--border);
+}
+.dark .lsf-label__text,
+.dark .lsf-label__number,
+.unicorn .lsf-label__text,
+.unicorn .lsf-label__number {
+  color: #ffffff !important;
+}
+.dark .lsf-choice_selected,
+.unicorn .lsf-choice_selected {
+  background-color: var(--primary) !important;
+  color: var(--primary-foreground) !important;
 }
 
 /* Unicorn theme decorative primary button elements */
