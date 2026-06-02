@@ -220,93 +220,121 @@ const LS_THEME = `
   background-color: var(--background) !important;
 }
 
-[class*="menu--"] {
+/* Sidebar and lists */
+html.dark .ls-root [class*="menu--"],
+html.unicorn .ls-root [class*="menu--"] {
   background-color: var(--card) !important;
   border-left: 1px solid var(--border) !important;
   color: var(--foreground) !important;
 }
-[class*="menu--"] * {
+html.dark .ls-root [class*="menu--"] *,
+html.unicorn .ls-root [class*="menu--"] * {
   border-color: var(--border) !important;
 }
 
-.lsf-sidepanel,
-.lsf-panel,
-.lsf-region-item,
-.lsf-history,
-.lsf-annotations,
-.lsf-sidebar,
-.lsf-empty-state {
+html.dark .ls-root .lsf-sidepanel,
+html.unicorn .ls-root .lsf-sidepanel,
+html.dark .ls-root .lsf-panel,
+html.unicorn .ls-root .lsf-panel,
+html.dark .ls-root .lsf-region-item,
+html.unicorn .ls-root .lsf-region-item,
+html.dark .ls-root .lsf-history,
+html.unicorn .ls-root .lsf-history,
+html.dark .ls-root .lsf-annotations,
+html.unicorn .ls-root .lsf-annotations,
+html.dark .ls-root .lsf-sidebar,
+html.unicorn .ls-root .lsf-sidebar,
+html.dark .ls-root .lsf-empty-state,
+html.unicorn .ls-root .lsf-empty-state {
   background-color: var(--card) !important;
   color: var(--foreground) !important;
 }
 
-.lsf-region-item_selected {
+html.dark .ls-root .lsf-region-item_selected,
+html.unicorn .ls-root .lsf-region-item_selected {
   background-color: var(--accent) !important;
   color: var(--accent-foreground) !important;
 }
 
-.lsf-labels {
+html.dark .ls-root .lsf-labels,
+html.unicorn .ls-root .lsf-labels {
   background-color: var(--card) !important;
   border-top: 1px solid var(--border) !important;
 }
 
+html.dark .ls-root .lsf-toolbar,
+html.unicorn .ls-root .lsf-toolbar,
+html.dark .ls-root [class*="toolbar--"],
+html.unicorn .ls-root [class*="toolbar--"] {
+  background-color: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--foreground) !important;
+}
+html.dark .ls-root .lsf-toolbar *,
+html.unicorn .ls-root .lsf-toolbar *,
+html.dark .ls-root [class*="toolbar--"] *,
+html.unicorn .ls-root [class*="toolbar--"] * {
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+}
+
 /* Ant Design (antd) component theme overrides inside the iframe */
-.dark .ant-tabs,
-.unicorn .ant-tabs,
-.dark .ant-tabs-nav,
-.unicorn .ant-tabs-nav,
-.dark .ant-tabs-tab,
-.unicorn .ant-tabs-tab,
-.dark .ant-tabs-content,
-.unicorn .ant-tabs-content,
-.dark .ant-tabs-tabpane,
-.unicorn .ant-tabs-tabpane,
-.dark .ant-tabs-content-holder,
-.unicorn .ant-tabs-content-holder,
-.dark .ant-card,
-.unicorn .ant-card,
-.dark .ant-card-body,
-.unicorn .ant-card-body,
-.dark .ant-list,
-.unicorn .ant-list,
-.dark .ant-list-item,
-.unicorn .ant-list-item {
+html.dark .ls-root .ant-tabs,
+html.unicorn .ls-root .ant-tabs,
+html.dark .ls-root .ant-tabs-nav,
+html.unicorn .ls-root .ant-tabs-nav,
+html.dark .ls-root .ant-tabs-tab,
+html.unicorn .ls-root .ant-tabs-tab,
+html.dark .ls-root .ant-tabs-content,
+html.unicorn .ls-root .ant-tabs-content,
+html.dark .ls-root .ant-tabs-tabpane,
+html.unicorn .ls-root .ant-tabs-tabpane,
+html.dark .ls-root .ant-tabs-content-holder,
+html.unicorn .ls-root .ant-tabs-content-holder,
+html.dark .ls-root .ant-card,
+html.unicorn .ls-root .ant-card,
+html.dark .ls-root .ant-card-body,
+html.unicorn .ls-root .ant-card-body,
+html.dark .ls-root .ant-list,
+html.unicorn .ls-root .ant-list,
+html.dark .ls-root .ant-list-item,
+html.unicorn .ls-root .ant-list-item {
   background-color: transparent !important;
   background: transparent !important;
   border-color: var(--border) !important;
   color: var(--foreground) !important;
 }
 
-.dark .ant-tabs-tab-btn,
-.unicorn .ant-tabs-tab-btn {
+html.dark .ls-root .ant-tabs-tab-btn,
+html.unicorn .ls-root .ant-tabs-tab-btn {
   color: var(--muted-foreground) !important;
 }
-.dark .ant-tabs-tab-active .ant-tabs-tab-btn,
-.unicorn .ant-tabs-tab-active .ant-tabs-tab-btn {
+html.dark .ls-root .ant-tabs-tab-active .ant-tabs-tab-btn,
+html.unicorn .ls-root .ant-tabs-tab-active .ant-tabs-tab-btn {
   color: var(--primary) !important;
 }
 
-.dark .ant-checkbox-wrapper,
-.unicorn .ant-checkbox-wrapper {
+html.dark .ls-root .ant-checkbox-wrapper,
+html.unicorn .ls-root .ant-checkbox-wrapper {
   color: var(--foreground) !important;
 }
 
 /* Label badges / choice buttons */
-.dark .lsf-label,
-.unicorn .lsf-label,
-.dark .lsf-choice,
-.unicorn .lsf-choice {
+html.dark .ls-root .lsf-label,
+html.unicorn .ls-root .lsf-label,
+html.dark .ls-root .lsf-choice,
+html.unicorn .ls-root .lsf-choice {
   background-color: var(--secondary);
   border-color: var(--border);
 }
-.dark .lsf-label__text,
-.dark .lsf-label__number,
-.unicorn .lsf-label__text,
-.unicorn .lsf-label__number {
+html.dark .ls-root .lsf-label__text,
+html.dark .ls-root .lsf-label__number,
+html.unicorn .ls-root .lsf-label__text,
+html.unicorn .ls-root .lsf-label__number {
   color: #ffffff !important;
 }
-.dark .lsf-choice_selected,
-.unicorn .lsf-choice_selected {
+html.dark .ls-root .lsf-choice_selected,
+html.unicorn .ls-root .lsf-choice_selected {
   background-color: var(--primary) !important;
   color: var(--primary-foreground) !important;
 }
@@ -348,10 +376,12 @@ const LS_THEME = `
 `;
 
 function injectTheme() {
-  if (document.getElementById("ls-theme")) return;
-  const style = document.createElement("style");
-  style.id = "ls-theme";
-  style.textContent = LS_THEME;
+  let style = document.getElementById("ls-theme");
+  if (!style) {
+    style = document.createElement("style");
+    style.id = "ls-theme";
+    style.textContent = LS_THEME;
+  }
   document.head.appendChild(style);
 }
 
@@ -426,6 +456,7 @@ export default function LabelerEmbed() {
             onUpdateAnnotation: (_ls: unknown, a: unknown) => post("submit", serializeAnnotation(a)),
             onSkipTask: () => post("skip"),
           });
+          injectTheme();
         })
         .catch((e) => {
           post("error", e.message || "Failed to load Label Studio bundles");
