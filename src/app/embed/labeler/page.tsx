@@ -406,16 +406,71 @@ html.unicorn .ls-root .ant-radio-wrapper {
 }
 
 /* Radio group tab-style buttons and sort headers */
+html.dark .ls-root .lsf-radio-group,
+html.unicorn .ls-root .lsf-radio-group {
+  background: var(--secondary) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: none !important;
+}
 html.dark .ls-root .lsf-radio-group__button,
 html.unicorn .ls-root .lsf-radio-group__button {
-  background-color: var(--secondary) !important;
+  background-color: transparent !important;
   color: var(--muted-foreground) !important;
-  border-color: var(--border) !important;
+  border-color: transparent !important;
 }
 html.dark .ls-root .lsf-radio-group__button_checked,
 html.unicorn .ls-root .lsf-radio-group__button_checked {
   background-color: var(--primary) !important;
-  color: #ffffff !important;
+  color: var(--primary-foreground) !important;
+}
+
+/* Sidebar toggle tabs overrides */
+html.dark .ls-root .lsf-sidebar-tabs__toggle,
+html.unicorn .ls-root .lsf-sidebar-tabs__toggle {
+  background-color: var(--secondary) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+html.dark .ls-root .lsf-sidebar-tabs__tab,
+html.unicorn .ls-root .lsf-sidebar-tabs__tab {
+  color: var(--muted-foreground) !important;
+  box-shadow: none !important;
+  background-color: transparent !important;
+}
+html.dark .ls-root .lsf-sidebar-tabs__tab_active,
+html.unicorn .ls-root .lsf-sidebar-tabs__tab_active {
+  background-color: var(--card) !important;
+  color: var(--foreground) !important;
+  box-shadow: none !important;
+}
+
+/* Global button overrides for dark and unicorn themes */
+html.dark .ls-root .lsf-button,
+html.unicorn .ls-root .lsf-button {
+  background-color: var(--secondary) !important;
+  color: var(--foreground) !important;
+  box-shadow: none !important;
+  border: 1px solid var(--border) !important;
+}
+html.dark .ls-root .lsf-button:hover,
+html.unicorn .ls-root .lsf-button:hover {
+  background-color: var(--accent) !important;
+  color: var(--accent-foreground) !important;
+}
+html.dark .ls-root .lsf-button:disabled,
+html.unicorn .ls-root .lsf-button:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+}
+html.dark .ls-root .lsf-button_look_primary,
+html.unicorn .ls-root .lsf-button_look_primary {
+  background-color: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+  border: none !important;
+}
+html.dark .ls-root .lsf-button_look_primary:hover,
+html.unicorn .ls-root .lsf-button_look_primary:hover {
+  background-color: color-mix(in oklch, var(--primary) 85%, black) !important;
+  color: var(--primary-foreground) !important;
 }
 html.dark .ls-root .lsf-entities__counter,
 html.unicorn .ls-root .lsf-entities__counter {
@@ -488,9 +543,11 @@ html.unicorn .ls-root .lsf-entities__visibility:hover svg {
   opacity: 1 !important;
 }
 
-/* Ant Design Dropdown Menu overrides for dark and unicorn themes */
+/* Ant Design Dropdown and Select Menu overrides for dark and unicorn themes */
 html.dark .ant-dropdown-menu,
-html.unicorn .ant-dropdown-menu {
+html.unicorn .ant-dropdown-menu,
+html.dark .ant-select-dropdown,
+html.unicorn .ant-select-dropdown {
   background-color: var(--card) !important;
   border: 1px solid var(--border) !important;
   padding: 4px !important;
@@ -499,7 +556,9 @@ html.unicorn .ant-dropdown-menu {
 }
 
 html.dark .ant-dropdown-menu-item,
-html.unicorn .ant-dropdown-menu-item {
+html.unicorn .ant-dropdown-menu-item,
+html.dark .ant-select-item-option,
+html.unicorn .ant-select-item-option {
   color: var(--foreground) !important;
   font-size: 13px !important;
   font-weight: 500 !important;
@@ -508,31 +567,37 @@ html.unicorn .ant-dropdown-menu-item {
   line-height: 1.4 !important;
 }
 
-/* Hover state */
+/* Hover / Active state */
 html.dark .ant-dropdown-menu-item:hover,
-html.unicorn .ant-dropdown-menu-item:hover {
+html.unicorn .ant-dropdown-menu-item:hover,
+html.dark .ant-select-item-option-active,
+html.unicorn .ant-select-item-option-active {
   background-color: var(--accent) !important;
   color: var(--accent-foreground) !important;
 }
 
 /* Selected state in dark mode */
-html.dark .ant-dropdown-menu-item-selected {
+html.dark .ant-dropdown-menu-item-selected,
+html.dark .ant-select-item-option-selected {
   background-color: var(--primary) !important;
   color: var(--primary-foreground) !important;
 }
 
 /* Selected state in unicorn mode */
-html.unicorn .ant-dropdown-menu-item-selected {
+html.unicorn .ant-dropdown-menu-item-selected,
+html.unicorn .ant-select-item-option-selected {
   background-color: color-mix(in oklch, var(--primary) 15%, transparent) !important;
   color: var(--primary) !important;
 }
 
 /* Selected item hover */
-html.dark .ant-dropdown-menu-item-selected:hover {
+html.dark .ant-dropdown-menu-item-selected:hover,
+html.dark .ant-select-item-option-selected:hover {
   background-color: var(--primary) !important;
   color: var(--primary-foreground) !important;
 }
-html.unicorn .ant-dropdown-menu-item-selected:hover {
+html.unicorn .ant-dropdown-menu-item-selected:hover,
+html.unicorn .ant-select-item-option-selected:hover {
   background-color: color-mix(in oklch, var(--primary) 25%, transparent) !important;
   color: var(--primary) !important;
 }
@@ -623,6 +688,89 @@ export default function LabelerEmbed() {
   const instanceRef = useRef<LSInstance | null>(null);
 
   useEffect(() => {
+    // ---------------------------------------------------------------------------
+    // AGGRESSIVE scroll-prevention: Label Studio's bundle uses many different
+    // DOM APIs to scroll (scrollIntoView, Element.scroll/scrollTo, direct
+    // scrollTop assignment, window.scroll*, focus). We block ALL of them
+    // unconditionally inside this iframe to stop the page from jumping when a
+    // bounding box is selected (which triggers sidebar highlight + scrollIntoView).
+    // ---------------------------------------------------------------------------
+
+    const originalScrollIntoView = Element.prototype.scrollIntoView;
+    const originalScrollIntoViewIfNeeded = (Element.prototype as any).scrollIntoViewIfNeeded;
+    const originalFocus = HTMLElement.prototype.focus;
+    const originalScrollTopDescriptor = Object.getOwnPropertyDescriptor(Element.prototype, "scrollTop");
+    const originalScrollTopSetter = originalScrollTopDescriptor?.set;
+    const originalScrollLeftDescriptor = Object.getOwnPropertyDescriptor(Element.prototype, "scrollLeft");
+    const originalScrollLeftSetter = originalScrollLeftDescriptor?.set;
+    const originalWindowScrollTo = window.scrollTo;
+    const originalWindowScroll = window.scroll;
+    const originalWindowScrollBy = window.scrollBy;
+    const originalElementScrollTo = Element.prototype.scrollTo;
+    const originalElementScroll = Element.prototype.scroll;
+
+    // Helper: is this element the document root (body or <html>)?
+    const isDocRoot = (el: Element) =>
+      el === document.body || el === document.documentElement;
+
+    // Block ALL scrollIntoView calls unconditionally.  Label Studio calls this
+    // on region-item elements, focused inputs, even canvas helpers — any of
+    // which can cascade a body scroll in a stacked (mobile) layout.
+    Element.prototype.scrollIntoView = function () {
+      // completely suppressed
+    };
+
+    if (originalScrollIntoViewIfNeeded) {
+      (Element.prototype as any).scrollIntoViewIfNeeded = function () {
+        // completely suppressed
+      };
+    }
+
+    // Block Element.prototype.scrollTo and .scroll on body/documentElement.
+    // Label Studio calls `container.scroll({top, left, behavior})` directly.
+    Element.prototype.scrollTo = function (...args: unknown[]) {
+      if (isDocRoot(this)) return;
+      return (originalElementScrollTo as Function).apply(this, args);
+    };
+    Element.prototype.scroll = function (...args: unknown[]) {
+      if (isDocRoot(this)) return;
+      return (originalElementScroll as Function).apply(this, args);
+    };
+
+    // Force preventScroll on ALL focus calls.
+    HTMLElement.prototype.focus = function (options) {
+      return originalFocus.call(this, { ...options, preventScroll: true });
+    };
+
+    // Block scrollTop writes on body/documentElement.
+    if (originalScrollTopSetter) {
+      Object.defineProperty(Element.prototype, "scrollTop", {
+        configurable: true,
+        set: function (value) {
+          if (isDocRoot(this)) return;
+          return originalScrollTopSetter.call(this, value);
+        },
+        get: originalScrollTopDescriptor?.get,
+      });
+    }
+
+    // Block scrollLeft writes on body/documentElement.
+    if (originalScrollLeftSetter) {
+      Object.defineProperty(Element.prototype, "scrollLeft", {
+        configurable: true,
+        set: function (value) {
+          if (isDocRoot(this)) return;
+          return originalScrollLeftSetter.call(this, value);
+        },
+        get: originalScrollLeftDescriptor?.get,
+      });
+    }
+
+    // Block all window-level scroll methods.
+    window.scrollTo = function () {};
+    window.scroll = function () {};
+    window.scrollBy = function () {};
+
     const origin = window.location.origin;
     const post = (type: string, annotation?: unknown) =>
       window.parent.postMessage({ source: "ls-embed", type, annotation }, origin);
@@ -719,6 +867,22 @@ export default function LabelerEmbed() {
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("error", onError);
       window.removeEventListener("unhandledrejection", onUnhandledRejection);
+      Element.prototype.scrollIntoView = originalScrollIntoView;
+      if (originalScrollIntoViewIfNeeded) {
+        (Element.prototype as any).scrollIntoViewIfNeeded = originalScrollIntoViewIfNeeded;
+      }
+      Element.prototype.scrollTo = originalElementScrollTo;
+      Element.prototype.scroll = originalElementScroll;
+      HTMLElement.prototype.focus = originalFocus;
+      if (originalScrollTopSetter && originalScrollTopDescriptor) {
+        Object.defineProperty(Element.prototype, "scrollTop", originalScrollTopDescriptor);
+      }
+      if (originalScrollLeftSetter && originalScrollLeftDescriptor) {
+        Object.defineProperty(Element.prototype, "scrollLeft", originalScrollLeftDescriptor);
+      }
+      window.scrollTo = originalWindowScrollTo;
+      window.scroll = originalWindowScroll;
+      window.scrollBy = originalWindowScrollBy;
       instanceRef.current?.destroy?.();
       instanceRef.current = null;
     };

@@ -132,7 +132,7 @@ export function WorkspaceUnicornDecor() {
 
       {/* Top-left rainbow, gently floating. */}
       <RainbowMark
-        className="unicorn-float absolute -left-3 top-12 h-16 w-auto opacity-25"
+        className="unicorn-float absolute -left-3 top-1 h-12 w-auto opacity-25"
         style={{ animationDelay: "0s" }}
       />
 
