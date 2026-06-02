@@ -52,6 +52,44 @@ function serializeAnnotation(annotation: unknown): unknown {
   return annotation;
 }
 
+/* Restyle Label Studio's action bar to match the app's shadcn buttons. */
+const LS_THEME = `
+.lsf-topbar { border-bottom: 1px solid #e9e9ef !important; }
+.lsf-controls { gap: 8px !important; padding: 8px 12px !important; }
+.lsf-button {
+  height: 34px !important;
+  width: auto !important;
+  min-width: 0 !important;
+  padding: 0 16px !important;
+  border-radius: 8px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  box-shadow: none !important;
+  border: 1px solid transparent !important;
+  text-transform: none !important;
+  transition: background-color .15s ease, color .15s ease, border-color .15s ease !important;
+}
+.lsf-button_look_primary {
+  background: #6366f1 !important;
+  color: #fff !important;
+}
+.lsf-button_look_primary:hover { background: #5457e3 !important; }
+.lsf-button_look_danger {
+  background: transparent !important;
+  color: #64748b !important;
+  border-color: #e2e8f0 !important;
+}
+.lsf-button_look_danger:hover { background: #f1f5f9 !important; color: #0f172a !important; }
+`;
+
+function injectTheme() {
+  if (document.getElementById("ls-theme")) return;
+  const style = document.createElement("style");
+  style.id = "ls-theme";
+  style.textContent = LS_THEME;
+  document.head.appendChild(style);
+}
+
 const INTERFACES = [
   "panel",
   "update",
@@ -88,6 +126,7 @@ export default function LabelerEmbed() {
             onUpdateAnnotation: (_ls: unknown, a: unknown) => post("submit", serializeAnnotation(a)),
             onSkipTask: () => post("skip"),
           });
+          injectTheme();
         })
         .catch(() => {
           if (rootRef.current) {
