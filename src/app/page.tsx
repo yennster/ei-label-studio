@@ -2,6 +2,7 @@ import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { ConnectPanel } from "@/components/connect-panel";
 import { UnicornHero } from "@/components/unicorn-decor";
+import { HeroSpotlight } from "@/components/hero-spotlight";
 import { Badge } from "@/components/ui/badge";
 import { AudioLines, ImageIcon, Activity, Link2, Cloud, ShieldCheck } from "lucide-react";
 
@@ -36,6 +37,7 @@ export default function Home() {
         {/* Hero */}
         <section className="hero-grid relative overflow-hidden">
           <div className="grid-lines pointer-events-none absolute inset-0" />
+          <HeroSpotlight />
           <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-16 sm:px-6 lg:pt-24">
             <div className="grid items-center gap-12 lg:grid-cols-2">
               <div className="space-y-6">

@@ -221,6 +221,72 @@
   mask-image: radial-gradient(70% 60% at 50% 0%, black, transparent 75%);
 }
 
+/* Mouse-following spotlight layered over .hero-grid.
+   HeroSpotlight (JS) drives the inner .hero-spotlight-glow with a single
+   transform — translate to the cursor, rotate toward the direction of travel,
+   and scale to stretch along it — eased every frame so the glow trails the
+   pointer (ambient lag) and elongates into an oblong the faster you move, then
+   relaxes back to a circle as you slow. Transform-only, so it stays on its own
+   compositor layer and never triggers layout. Colour is theme-aware (indigo
+   primary + brand cyan, a magenta tint under .unicorn) and lives here, not JS. */
+.hero-spotlight {
+  overflow: hidden;
+  /* Fade the glow out before the left/right viewport edges so a large, fast
+     spotlight never shows a hard clipped edge against the screen boundary.
+     Top stays open — the glow's resting home is up there with .hero-grid. */
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 9%, #000 91%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 9%, #000 91%, transparent);
+}
+.hero-spotlight-glow {
+  position: absolute;
+  left: 0;
+  top: 0;
+  /* Fallback box for the pre-hydration frame; HeroSpotlight overrides the
+     width/height/margins from the hero size and rewrites transform each frame.
+     Centred on the parent origin via negative margins so translate() lands the
+     glow's centre on the cursor. */
+  width: 640px;
+  height: 640px;
+  margin: -320px 0 0 -320px;
+  transform: translate(calc(50vw - 50%), 32px);
+  background:
+    radial-gradient(
+      circle at center,
+      color-mix(in oklch, var(--primary) 24%, transparent) 0%,
+      transparent 64%
+    ),
+    radial-gradient(
+      circle at center,
+      color-mix(in oklch, oklch(0.78 0.13 200) 18%, transparent) 0%,
+      transparent 46%
+    );
+  will-change: transform;
+}
+
+/* Unicorn theme: swap the cyan accent for a softer magenta/rainbow tint so the
+   spotlight reads as a pastel glow that belongs with .unicorn .hero-grid. */
+.unicorn .hero-spotlight-glow {
+  background:
+    radial-gradient(
+      circle at center,
+      color-mix(in oklch, var(--primary) 26%, transparent) 0%,
+      transparent 66%
+    ),
+    radial-gradient(
+      circle at center,
+      color-mix(in oklch, var(--chart-3) 22%, transparent) 0%,
+      transparent 48%
+    );
+}
+
+/* Reduced motion: HeroSpotlight sizes + parks the glow centre-top and runs no
+   loop, so nothing animates. */
+@media (prefers-reduced-motion: reduce) {
+  .hero-spotlight-glow {
+    will-change: auto;
+  }
+}
+
 /* ---- Unicorn site header — pink frosted glass ---- */
 .unicorn .site-header {
   background-color: oklch(0.92 0.06 335 / 0.85);
