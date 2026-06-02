@@ -25,7 +25,7 @@ export function ThemeMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label="Select theme">
+        <Button variant="ghost" size="icon-sm" aria-label="Select theme">
           {mounted && theme === "light" ? (
             <Sun className="size-4" />
           ) : mounted && theme === "unicorn" ? (

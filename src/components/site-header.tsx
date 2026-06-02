@@ -25,7 +25,7 @@ export function SiteHeader() {
           <Button variant="ghost" size="sm" asChild>
             <Link href="/docs">URL params</Link>
           </Button>
-          <Button variant="ghost" size="icon" asChild aria-label="GitHub repository">
+          <Button variant="ghost" size="icon-sm" asChild aria-label="GitHub repository">
             <a
               href="https://github.com/yennster/ei-label-studio"
               target="_blank"

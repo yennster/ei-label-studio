@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 
 export function LogoMark({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 32 32" fill="none" className={cn("size-7", className)} aria-hidden>
+    <svg viewBox="0 0 32 32" fill="none" className={cn("size-6", className)} aria-hidden>
       <defs>
         <linearGradient id="lm" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
           <stop stopColor="oklch(0.66 0.2 275)" />
