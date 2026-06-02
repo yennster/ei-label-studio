@@ -69,13 +69,27 @@ export function ConnectPanel() {
 
       if (preset.apiKey && !autoConnected.current) {
         autoConnected.current = true;
-        void doConnect(preset.apiKey, preset.projectId ? String(preset.projectId) : "", preset.studioHost, preset.ingestionHost);
+        // A URL that carries the key is a deep link — drop straight into the
+        // workspace instead of stopping at the project picker.
+        void doConnect(
+          preset.apiKey,
+          preset.projectId ? String(preset.projectId) : "",
+          preset.studioHost,
+          preset.ingestionHost,
+          { openWorkspace: true },
+        );
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function doConnect(key: string, pid: string, sHost?: string, iHost?: string) {
+  async function doConnect(
+    key: string,
+    pid: string,
+    sHost?: string,
+    iHost?: string,
+    opts?: { openWorkspace?: boolean },
+  ) {
     if (!key.trim()) {
       toast.error("Enter your Edge Impulse API key.");
       return;
@@ -89,6 +103,11 @@ export function ConnectPanel() {
         ingestionHost: iHost?.trim() || undefined,
       });
       setConnected(project);
+      if (opts?.openWorkspace) {
+        toast.success(`Connected to ${project.name}`);
+        router.push("/label");
+        return;
+      }
       const all = await getProjects().catch(() => [project]);
       setProjects(all.length ? all : [project]);
       toast.success(`Connected to ${project.name}`);
