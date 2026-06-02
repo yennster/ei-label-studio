@@ -27,7 +27,13 @@ import {
 } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
 import { SampleQueue } from "@/components/sample-queue";
+import { cn } from "@/lib/utils";
 import { useApp } from "@/lib/store";
 import { getSamples, getProjects, relabel, setBoundingBoxes } from "@/lib/ei-client";
 import { parsePreset } from "@/lib/url-params";
@@ -80,6 +86,7 @@ export function Workspace() {
   const [customLabels, setCustomLabels] = useState<string[]>([]);
   const [newLabel, setNewLabel] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [resizing, setResizing] = useState(false);
 
   // On direct loads the in-memory store is empty even when the session cookie
   // is valid. Apply URL presets, then rehydrate from the existing session
@@ -150,12 +157,25 @@ export function Workspace() {
       | undefined;
   }, [samples]);
 
-  // Class label set = distinct dataset labels ∪ custom labels ∪ active label.
+  // Class vocabulary = the project's distinct classes ∪ custom labels.
+  // EI summarizes multi-class samples as a comma-joined string (e.g.
+  // "coffee, lamp"), so split those into individual classes, and pull labels
+  // off any bounding boxes too.
   const labelSet = useMemo(() => {
     const set = new Set<string>();
-    for (const s of samples) if (s.label && s.label !== "unlabeled") set.add(s.label);
+    const addLabel = (raw?: string) => {
+      if (!raw || raw === "unlabeled") return;
+      for (const part of raw.split(",")) {
+        const v = part.trim();
+        if (v) set.add(v);
+      }
+    };
+    for (const s of samples) {
+      addLabel(s.label);
+      s.boundingBoxes?.forEach((b) => addLabel(b.label));
+    }
     for (const l of customLabels) set.add(l);
-    if (active?.label && active.label !== "unlabeled") set.add(active.label);
+    addLabel(active?.label);
     return Array.from(set).sort();
   }, [samples, customLabels, active]);
 
@@ -281,9 +301,14 @@ export function Workspace() {
   const progress = samples.length ? (labeledIds.size / samples.length) * 100 : 0;
 
   return (
-    <div className="grid flex-1 grid-cols-1 lg:grid-cols-[260px_1fr_300px]">
+    <ResizablePanelGroup
+      direction="horizontal"
+      autoSaveId="ei-workspace-cols"
+      className={cn("min-h-0 flex-1", resizing && "select-none [&_iframe]:pointer-events-none")}
+    >
       {/* Left: queue */}
-      <aside className="flex min-h-0 flex-col border-r border-border/60 bg-sidebar/40">
+      <ResizablePanel defaultSize={20} minSize={13} maxSize={34} className="min-w-0">
+      <aside className="flex h-full min-h-0 flex-col bg-sidebar/40">
         <div className="space-y-3 border-b border-border/60 p-3">
           <Select value={category} onValueChange={(v) => setCategory(v as EICategory)}>
             <SelectTrigger className="w-full">
@@ -324,9 +349,13 @@ export function Workspace() {
           </div>
         )}
       </aside>
+      </ResizablePanel>
+
+      <ResizableHandle withHandle onDragging={setResizing} />
 
       {/* Center: canvas */}
-      <section className="relative flex min-h-0 flex-col bg-muted/20">
+      <ResizablePanel defaultSize={56} minSize={30} className="min-w-0">
+      <section className="relative flex h-full min-h-0 flex-col bg-muted/20">
         <div className="flex items-center justify-between gap-2 border-b border-border/60 px-4 py-2">
           <div className="flex items-center gap-2 text-sm">
             <Button variant="ghost" size="icon" onClick={() => goTo(activeIndex - 1)} disabled={activeIndex <= 0}>
@@ -366,9 +395,13 @@ export function Workspace() {
           )}
         </div>
       </section>
+      </ResizablePanel>
+
+      <ResizableHandle withHandle onDragging={setResizing} />
 
       {/* Right: inspector */}
-      <aside className="hidden min-h-0 flex-col gap-4 overflow-y-auto border-l border-border/60 p-4 lg:flex">
+      <ResizablePanel defaultSize={24} minSize={16} maxSize={40} className="min-w-0">
+      <aside className="flex h-full min-h-0 flex-col gap-4 overflow-y-auto p-4">
         <div className="space-y-1.5">
           <h2 className="text-sm font-semibold leading-tight">{project.name}</h2>
           <div className="flex items-center gap-2">
@@ -458,7 +491,8 @@ export function Workspace() {
           </div>
         )}
       </aside>
-    </div>
+      </ResizablePanel>
+    </ResizablePanelGroup>
   );
 }
 
