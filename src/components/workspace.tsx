@@ -391,12 +391,12 @@ export function Workspace() {
       {/* Center: canvas */}
       <ResizablePanel defaultSize={56} minSize={30} className="min-w-0">
       <section className="relative flex h-full min-h-0 flex-col bg-muted/20">
-        <div className="flex h-14 items-center justify-between gap-2 border-b border-border/60 px-4">
-          <div className="flex items-center gap-2 text-sm">
+        <div className="flex h-14 items-center justify-between gap-4 border-b border-border/60 px-4">
+          <div className="flex items-center gap-2 text-sm shrink-0">
             <Button variant="ghost" size="icon" onClick={() => goTo(activeIndex - 1)} disabled={activeIndex <= 0}>
               <ChevronLeft className="size-4" />
             </Button>
-            <span className="tabular-nums text-muted-foreground">
+            <span className="tabular-nums text-muted-foreground whitespace-nowrap">
               {samples.length ? activeIndex + 1 : 0} / {samples.length}
             </span>
             <Button
@@ -408,19 +408,19 @@ export function Workspace() {
               <ChevronRight className="size-4" />
             </Button>
           </div>
-          {active && <span className="hidden truncate font-mono text-xs text-muted-foreground sm:inline">{active.filename}</span>}
-          <div className="flex items-center gap-2 pr-10">
-            <Badge className="gap-1 bg-primary/15 text-primary hover:bg-primary/15">
+          {active && <span className="hidden truncate font-mono text-xs text-muted-foreground sm:inline min-w-0 flex-1 text-center">{active.filename}</span>}
+          <div className="flex items-center gap-2 pr-10 shrink-0">
+            <Badge className="gap-1 bg-primary/15 text-primary hover:bg-primary/15 whitespace-nowrap">
               <Boxes className="size-3" />
               {projectTypeLabel(project, projectModality)}
             </Badge>
-            <Badge variant="secondary" className="hidden gap-1 md:inline-flex">
+            <Badge variant="secondary" className="hidden gap-1 md:inline-flex whitespace-nowrap">
               <Tag className="size-3" />
               {TASK_LABELS[effectiveTask]}
             </Badge>
           </div>
         </div>
-        <div className="relative min-h-0 flex-1">
+        <div className="relative min-h-0 flex-1 min-w-0 overflow-hidden">
           {lsTask ? (
             <LabelStudio
               config={config}
@@ -453,7 +453,7 @@ export function Workspace() {
         className="min-w-0"
       >
       <aside className="flex h-full min-h-0 flex-col gap-4 overflow-y-auto p-4">
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 pr-8">
           <h2 className="text-sm font-semibold leading-tight">{project.name}</h2>
           <div className="flex items-center gap-2">
             <Badge className="bg-primary/15 text-primary hover:bg-primary/15">

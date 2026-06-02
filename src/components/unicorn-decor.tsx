@@ -142,15 +142,7 @@ export function WorkspaceUnicornDecor() {
         style={{ animationDelay: "1.4s" }}
       />
 
-      {/* A couple of emoji friends bobbing at opposite corners. */}
-      <span
-        className="unicorn-float absolute right-6 top-16 text-3xl opacity-30"
-        style={{ animationDelay: "0.7s" }}
-        role="img"
-        aria-label="unicorn"
-      >
-        🦄
-      </span>
+      {/* An emoji friend bobbing at the bottom-left corner. */}
       <span
         className="unicorn-float absolute bottom-24 left-5 text-2xl opacity-25"
         style={{ animationDelay: "2.1s" }}

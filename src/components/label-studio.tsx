@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useTheme } from "next-themes";
+import { toast } from "sonner";
 import type { LSTask } from "@/lib/types";
 
 /*
@@ -22,15 +24,33 @@ interface LabelStudioProps {
 export default function LabelStudio({ config, task, onSubmit, onSkip, onNav }: LabelStudioProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const ready = useRef(false);
+  const { resolvedTheme } = useTheme();
   const handlers = useRef({ onSubmit, onSkip, onNav });
   handlers.current = { onSubmit, onSkip, onNav };
+
+  const themeRef = useRef(resolvedTheme);
+  themeRef.current = resolvedTheme;
+
+  // Use a unique session token as a cache-buster so the iframe page reloads
+  // fresh on mount but stays constant while hot-reloading samples.
+  const cacheBuster = useRef(Math.random().toString(36).substring(7));
+
+  useEffect(() => {
+    if (ready.current) {
+      const origin = window.location.origin;
+      iframeRef.current?.contentWindow?.postMessage(
+        { source: "ls-host", type: "theme", theme: resolvedTheme },
+        origin,
+      );
+    }
+  }, [resolvedTheme]);
 
   useEffect(() => {
     const origin = window.location.origin;
 
     const send = () =>
       iframeRef.current?.contentWindow?.postMessage(
-        { source: "ls-host", type: "render", config, task },
+        { source: "ls-host", type: "render", config, task, theme: themeRef.current },
         origin,
       );
 
@@ -47,6 +67,8 @@ export default function LabelStudio({ config, task, onSubmit, onSkip, onNav }: L
         handlers.current.onSkip?.();
       } else if (d.type === "nav") {
         handlers.current.onNav?.(d.dir);
+      } else if (d.type === "error") {
+        toast.error(`Canvas error: ${d.annotation}`);
       }
     }
 
@@ -58,16 +80,12 @@ export default function LabelStudio({ config, task, onSubmit, onSkip, onNav }: L
   }, [config, task]);
 
   return (
-    // The Label Studio editor needs a comfortable width for its full layout
-    // (image + regions/labels panels). Below that we scroll the editor
-    // horizontally inside the center column rather than letting LS render a
-    // broken, clipped layout — the surrounding page never grows.
-    <div className="h-full w-full overflow-x-auto bg-white">
+    <div className="h-full w-full bg-white">
       <iframe
         ref={iframeRef}
-        src="/embed/labeler"
+        src={`/embed/labeler?theme=${resolvedTheme || "dark"}&v=${cacheBuster.current}`}
         title="Label Studio"
-        className="h-full w-full min-w-[760px] border-0 bg-white"
+        className="h-full w-full min-w-0 border-0 bg-white"
       />
     </div>
   );
