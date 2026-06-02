@@ -457,6 +457,16 @@ export default function LabelerEmbed() {
             onSkipTask: () => post("skip"),
           });
           injectTheme();
+          setTimeout(() => {
+            if (rootRef.current) {
+              const rootHtml = rootRef.current.innerHTML || "";
+              fetch("/api/debug-dom", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ html: rootHtml }),
+              }).catch(console.error);
+            }
+          }, 3000);
         })
         .catch((e) => {
           post("error", e.message || "Failed to load Label Studio bundles");
