@@ -342,7 +342,9 @@ html.unicorn .ls-root .ant-tabs-tab-active .ant-tabs-tab-btn {
 }
 
 html.dark .ls-root .ant-checkbox-wrapper,
-html.unicorn .ls-root .ant-checkbox-wrapper {
+html.unicorn .ls-root .ant-checkbox-wrapper,
+html.dark .ls-root .ant-radio-wrapper,
+html.unicorn .ls-root .ant-radio-wrapper {
   color: var(--foreground) !important;
 }
 
@@ -368,24 +370,12 @@ html.unicorn .ls-root .lsf-entities__sort {
   color: var(--foreground) !important;
 }
 
-/* Label badges / choice buttons */
-html.dark .ls-root .lsf-label,
-html.unicorn .ls-root .lsf-label,
-html.dark .ls-root .lsf-choice,
-html.unicorn .ls-root .lsf-choice {
-  background-color: var(--secondary);
-  border-color: var(--border);
-}
+/* Label badges / choice buttons - Preserve dynamic background and left border colors, only override text and hotkey colors for dark/unicorn modes */
 html.dark .ls-root .lsf-label__text,
-html.dark .ls-root .lsf-label__number,
+html.dark .ls-root .lsf-label__hotkey,
 html.unicorn .ls-root .lsf-label__text,
-html.unicorn .ls-root .lsf-label__number {
+html.unicorn .ls-root .lsf-label__hotkey {
   color: #ffffff !important;
-}
-html.dark .ls-root .lsf-choice_selected,
-html.unicorn .ls-root .lsf-choice_selected {
-  background-color: var(--primary) !important;
-  color: var(--primary-foreground) !important;
 }
 
 /* Unicorn theme decorative primary button elements */
