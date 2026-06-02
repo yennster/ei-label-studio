@@ -275,6 +275,59 @@
   }
 }
 
+/* ---- Unicorn workspace accents (rainbow gradients via stable shadcn hooks) ---- */
+
+/* Rainbow stops reused across the workspace: pink → coral → gold → mint →
+   periwinkle (same spread as RAINBOW / the chart palette). */
+
+/* Progress bar fill becomes a full rainbow sweep. Targets the stable shadcn
+   data-slot so it doesn't depend on workspace.tsx internals. */
+.unicorn [data-slot="progress-indicator"] {
+  background-image: linear-gradient(
+    90deg,
+    oklch(0.66 0.24 350),
+    oklch(0.72 0.19 30),
+    oklch(0.82 0.16 90),
+    oklch(0.74 0.16 160),
+    oklch(0.62 0.2 285)
+  ) !important;
+}
+
+/* A whisper-thin rainbow line riding the top of the progress track. */
+.unicorn [data-slot="progress"] {
+  border-top: 2px solid transparent;
+  border-image: linear-gradient(
+      90deg,
+      oklch(0.66 0.24 350),
+      oklch(0.72 0.19 30),
+      oklch(0.82 0.16 90),
+      oklch(0.74 0.16 160),
+      oklch(0.62 0.2 285)
+    )
+    1;
+}
+
+/* Rainbow-tinted text selection across the workspace (browser-native hook,
+   fully stable). Pastel pink wash keeps selected text readable. */
+.unicorn ::selection {
+  background-color: color-mix(in oklch, oklch(0.66 0.24 350) 28%, transparent);
+  color: var(--foreground);
+}
+
+/* Gentle vertical drift for the ambient workspace decorations. */
+@keyframes unicorn-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.unicorn .unicorn-float {
+  animation: unicorn-float 6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .unicorn .unicorn-float {
+    animation: none;
+  }
+}
+
 /* Embed mode: strip chrome so the workspace fills an iframe. */
 .embed-mode header {
   display: none !important;

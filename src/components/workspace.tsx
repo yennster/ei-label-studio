@@ -14,7 +14,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
-  PanelRight,
+  PanelRightClose,
+  PanelRightOpen,
   Plus,
   RefreshCw,
   SkipForward,
@@ -327,6 +328,7 @@ export function Workspace() {
   const progress = samples.length ? (labeledIds.size / samples.length) * 100 : 0;
 
   return (
+    <div className="relative flex min-h-0 flex-1">
     <ResizablePanelGroup
       direction="horizontal"
       autoSaveId="ei-workspace-cols"
@@ -335,7 +337,7 @@ export function Workspace() {
       {/* Left: queue */}
       <ResizablePanel defaultSize={20} minSize={13} maxSize={34} className="min-w-0">
       <aside className="flex h-full min-h-0 flex-col overflow-hidden bg-sidebar/40">
-        <div className="flex items-center justify-between gap-2 border-b border-border/60 px-3 py-2.5">
+        <div className="flex h-14 items-center justify-between gap-2 border-b border-border/60 px-3">
           <Link href="/" className="flex min-w-0 items-center gap-2" title="Back to projects">
             <LogoMark className="size-5 shrink-0" />
             <span className="truncate text-sm font-semibold tracking-tight">EI · Label Studio</span>
@@ -389,7 +391,7 @@ export function Workspace() {
       {/* Center: canvas */}
       <ResizablePanel defaultSize={56} minSize={30} className="min-w-0">
       <section className="relative flex h-full min-h-0 flex-col bg-muted/20">
-        <div className="flex items-center justify-between gap-2 border-b border-border/60 px-4 py-2">
+        <div className="flex h-14 items-center justify-between gap-2 border-b border-border/60 px-4">
           <div className="flex items-center gap-2 text-sm">
             <Button variant="ghost" size="icon" onClick={() => goTo(activeIndex - 1)} disabled={activeIndex <= 0}>
               <ChevronLeft className="size-4" />
@@ -407,7 +409,7 @@ export function Workspace() {
             </Button>
           </div>
           {active && <span className="hidden truncate font-mono text-xs text-muted-foreground sm:inline">{active.filename}</span>}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 pr-10">
             <Badge className="gap-1 bg-primary/15 text-primary hover:bg-primary/15">
               <Boxes className="size-3" />
               {projectTypeLabel(project, projectModality)}
@@ -416,14 +418,6 @@ export function Workspace() {
               <Tag className="size-3" />
               {TASK_LABELS[effectiveTask]}
             </Badge>
-            <Button
-              variant={inspectorCollapsed ? "secondary" : "ghost"}
-              size="icon"
-              onClick={toggleInspector}
-              title={inspectorCollapsed ? "Show details panel" : "Hide details panel"}
-            >
-              <PanelRight className="size-4" />
-            </Button>
           </div>
         </div>
         <div className="relative min-h-0 flex-1">
@@ -550,6 +544,23 @@ export function Workspace() {
       </aside>
       </ResizablePanel>
     </ResizablePanelGroup>
+
+      {/* Inspector toggle: anchored to the workspace top-right so it never
+          shifts when the inspector panel collapses or expands. */}
+      <Button
+        variant={inspectorCollapsed ? "secondary" : "ghost"}
+        size="icon"
+        onClick={toggleInspector}
+        title={inspectorCollapsed ? "Show details panel" : "Hide details panel"}
+        className="absolute right-2 top-2 z-50"
+      >
+        {inspectorCollapsed ? (
+          <PanelRightOpen className="size-4" />
+        ) : (
+          <PanelRightClose className="size-4" />
+        )}
+      </Button>
+    </div>
   );
 }
 

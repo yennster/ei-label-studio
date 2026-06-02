@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
+import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 
 const RAINBOW = [
@@ -12,11 +13,18 @@ const RAINBOW = [
 ];
 
 /** Inline SVG rainbow arc with a little cloud + twinkling sparkles. */
-function RainbowMark({ className }: { className?: string }) {
+function RainbowMark({
+  className,
+  style,
+}: {
+  className?: string;
+  style?: CSSProperties;
+}) {
   return (
     <svg
       viewBox="0 0 120 96"
       className={className}
+      style={style}
       role="img"
       aria-label="Rainbow and sparkles"
       fill="none"
@@ -84,6 +92,73 @@ export function UnicornHero({ className }: { className?: string }) {
           🌈
         </span>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Ambient unicorn flair for the labeling workspace.
+ *
+ * Self-gates: renders nothing unless the path is exactly "/label" AND the
+ * active theme is "unicorn", so it is harmless to mount globally. The overlay
+ * is a fixed, pointer-events-none, aria-hidden layer that tucks a few softly
+ * floating rainbows/sparkles into the corners and lays a subtle rainbow glow
+ * along the top edge — never covering the working area or blocking clicks.
+ */
+export function WorkspaceUnicornDecor() {
+  const { resolvedTheme } = useTheme();
+  const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
+
+  if (!mounted || pathname !== "/label" || resolvedTheme !== "unicorn") {
+    return null;
+  }
+
+  return (
+    <div
+      className="pointer-events-none fixed inset-0 z-40 select-none overflow-hidden"
+      aria-hidden="true"
+    >
+      {/* Soft rainbow glow washing down from the top edge. */}
+      <div
+        className="absolute inset-x-0 top-0 h-40"
+        style={{
+          background:
+            "linear-gradient(180deg, color-mix(in oklch, var(--primary) 16%, transparent), transparent 90%)",
+        }}
+      />
+
+      {/* Top-left rainbow, gently floating. */}
+      <RainbowMark
+        className="unicorn-float absolute -left-3 top-12 h-16 w-auto opacity-25"
+        style={{ animationDelay: "0s" }}
+      />
+
+      {/* Bottom-right rainbow, slightly larger, drifting on its own beat. */}
+      <RainbowMark
+        className="unicorn-float absolute -right-4 bottom-6 h-20 w-auto opacity-20"
+        style={{ animationDelay: "1.4s" }}
+      />
+
+      {/* A couple of emoji friends bobbing at opposite corners. */}
+      <span
+        className="unicorn-float absolute right-6 top-16 text-3xl opacity-30"
+        style={{ animationDelay: "0.7s" }}
+        role="img"
+        aria-label="unicorn"
+      >
+        🦄
+      </span>
+      <span
+        className="unicorn-float absolute bottom-24 left-5 text-2xl opacity-25"
+        style={{ animationDelay: "2.1s" }}
+        role="img"
+        aria-label="rainbow"
+      >
+        🌈
+      </span>
     </div>
   );
 }
