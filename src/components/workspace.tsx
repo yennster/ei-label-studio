@@ -2,9 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
+import { LogoMark } from "@/components/logo";
+import { ThemeToggle } from "@/components/theme-toggle";
 import {
   Boxes,
   ChevronLeft,
@@ -308,7 +311,14 @@ export function Workspace() {
     >
       {/* Left: queue */}
       <ResizablePanel defaultSize={20} minSize={13} maxSize={34} className="min-w-0">
-      <aside className="flex h-full min-h-0 flex-col bg-sidebar/40">
+      <aside className="flex h-full min-h-0 flex-col overflow-hidden bg-sidebar/40">
+        <div className="flex items-center justify-between gap-2 border-b border-border/60 px-3 py-2.5">
+          <Link href="/" className="flex min-w-0 items-center gap-2" title="Back to projects">
+            <LogoMark className="size-5 shrink-0" />
+            <span className="truncate text-sm font-semibold tracking-tight">EI · Label Studio</span>
+          </Link>
+          <ThemeToggle />
+        </div>
         <div className="space-y-3 border-b border-border/60 p-3">
           <Select value={category} onValueChange={(v) => setCategory(v as EICategory)}>
             <SelectTrigger className="w-full">
@@ -387,7 +397,13 @@ export function Workspace() {
         </div>
         <div className="relative min-h-0 flex-1">
           {lsTask ? (
-            <LabelStudio key={`${active?.id}-${effectiveTask}`} config={config} task={lsTask} onSubmit={handleSubmit} onSkip={() => goTo(activeIndex + 1)} />
+            <LabelStudio
+              config={config}
+              task={lsTask}
+              onSubmit={handleSubmit}
+              onSkip={() => goTo(activeIndex + 1)}
+              onNav={(dir) => goTo(activeIndex + dir)}
+            />
           ) : (
             <div className="flex h-full items-center justify-center text-muted-foreground">
               {loading ? "" : "Select a sample to begin."}

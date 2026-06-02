@@ -206,7 +206,8 @@ export function ConnectPanel() {
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") doConnect(apiKey, projectId, studioHost, ingestionHost);
+                if (e.key === "Enter")
+                  doConnect(apiKey, projectId, studioHost, ingestionHost, { openWorkspace: true });
               }}
               className="pl-9 font-mono"
               autoComplete="off"
@@ -258,7 +259,7 @@ export function ConnectPanel() {
         <Button
           className="w-full"
           disabled={busy}
-          onClick={() => doConnect(apiKey, projectId, studioHost, ingestionHost)}
+          onClick={() => doConnect(apiKey, projectId, studioHost, ingestionHost, { openWorkspace: true })}
         >
           {busy ? <Loader2 className="size-4 animate-spin" /> : <ArrowRight className="size-4" />}
           {busy ? "Connecting…" : "Connect project"}

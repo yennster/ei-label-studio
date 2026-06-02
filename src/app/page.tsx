@@ -47,7 +47,7 @@ export default function Home() {
                 </Badge>
                 <h1 className="text-balance text-4xl font-semibold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
                   Your Edge Impulse data,{" "}
-                  <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-primary to-cyan-400 bg-clip-text text-transparent">
                     labeled and ready.
                   </span>
                 </h1>

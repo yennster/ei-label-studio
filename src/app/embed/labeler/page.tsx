@@ -142,11 +142,22 @@ export default function LabelerEmbed() {
       if (d?.source === "ls-host" && d.type === "render") render(d.config, d.task);
     }
 
+    // Focus lives inside this iframe while labeling, so forward sample-nav keys
+    // ([ and ]) up to the host — otherwise the parent never sees them.
+    function onKeyDown(e: KeyboardEvent) {
+      const t = e.target as HTMLElement;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+      if (e.key === "[") window.parent.postMessage({ source: "ls-embed", type: "nav", dir: -1 }, origin);
+      else if (e.key === "]") window.parent.postMessage({ source: "ls-embed", type: "nav", dir: 1 }, origin);
+    }
+
     window.addEventListener("message", onMessage);
+    window.addEventListener("keydown", onKeyDown);
     post("ready");
 
     return () => {
       window.removeEventListener("message", onMessage);
+      window.removeEventListener("keydown", onKeyDown);
       instanceRef.current?.destroy?.();
       instanceRef.current = null;
     };

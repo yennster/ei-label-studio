@@ -28,8 +28,10 @@
   --muted: oklch(0.96 0.01 265);
   --muted-foreground: oklch(0.52 0.02 265);
 
-  --accent: oklch(0.7 0.16 200);
-  --accent-foreground: oklch(0.17 0.04 240);
+  /* Accent is a quiet neutral so component hovers/selection don't fight the
+     indigo primary. The brand cyan lives only in the logo + hero gradient. */
+  --accent: oklch(0.95 0.012 270);
+  --accent-foreground: oklch(0.3 0.05 270);
 
   --destructive: oklch(0.58 0.22 25);
   --destructive-foreground: oklch(0.99 0.005 25);
@@ -72,8 +74,9 @@
   --muted: oklch(0.25 0.02 265);
   --muted-foreground: oklch(0.68 0.02 265);
 
-  --accent: oklch(0.72 0.15 200);
-  --accent-foreground: oklch(0.16 0.03 240);
+  /* Quiet neutral accent (see light theme note). */
+  --accent: oklch(0.29 0.025 270);
+  --accent-foreground: oklch(0.96 0.01 265);
 
   --destructive: oklch(0.65 0.2 25);
   --destructive-foreground: oklch(0.98 0.01 25);

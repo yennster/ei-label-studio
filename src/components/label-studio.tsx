@@ -15,13 +15,15 @@ interface LabelStudioProps {
   task: LSTask;
   onSubmit: (annotation: unknown) => void;
   onSkip?: () => void;
+  /** Sample navigation forwarded from inside the iframe ([ and ] keys). */
+  onNav?: (dir: number) => void;
 }
 
-export default function LabelStudio({ config, task, onSubmit, onSkip }: LabelStudioProps) {
+export default function LabelStudio({ config, task, onSubmit, onSkip, onNav }: LabelStudioProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const ready = useRef(false);
-  const handlers = useRef({ onSubmit, onSkip });
-  handlers.current = { onSubmit, onSkip };
+  const handlers = useRef({ onSubmit, onSkip, onNav });
+  handlers.current = { onSubmit, onSkip, onNav };
 
   useEffect(() => {
     const origin = window.location.origin;
@@ -43,6 +45,8 @@ export default function LabelStudio({ config, task, onSubmit, onSkip }: LabelStu
         handlers.current.onSubmit(d.annotation);
       } else if (d.type === "skip") {
         handlers.current.onSkip?.();
+      } else if (d.type === "nav") {
+        handlers.current.onNav?.(d.dir);
       }
     }
 

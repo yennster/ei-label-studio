@@ -33,6 +33,7 @@ export function SampleQueue({
           const Icon = MODALITY_ICON[detectModality(s)];
           const active = i === activeIndex;
           const done = labeledIds.has(s.id);
+          const unlabeled = !s.label || s.label === "unlabeled";
           return (
             <li key={s.id}>
               <button
@@ -45,17 +46,32 @@ export function SampleQueue({
                 )}
               >
                 <Icon
-                  className={cn("size-4 shrink-0", active ? "text-primary" : "text-muted-foreground")}
+                  className={cn(
+                    "size-4 shrink-0",
+                    active ? "text-primary" : unlabeled ? "text-muted-foreground/50" : "text-muted-foreground",
+                  )}
                 />
-                <span className="min-w-0 flex-1 truncate font-mono text-xs">{s.filename}</span>
+                <span
+                  className={cn(
+                    "min-w-0 flex-1 truncate font-mono text-xs",
+                    unlabeled && !active && "text-muted-foreground",
+                  )}
+                >
+                  {s.filename}
+                </span>
                 {done ? (
                   <Check className="size-3.5 shrink-0 text-emerald-500" />
+                ) : unlabeled ? (
+                  <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-dashed border-muted-foreground/40 px-1.5 py-0 text-[10px] text-muted-foreground">
+                    <span className="size-1.5 rounded-full border border-muted-foreground/60" />
+                    unlabeled
+                  </span>
                 ) : (
                   <Badge
                     variant="secondary"
                     className="max-w-24 shrink-0 truncate px-1.5 py-0 text-[10px]"
                   >
-                    {s.label || "—"}
+                    {s.label}
                   </Badge>
                 )}
               </button>
