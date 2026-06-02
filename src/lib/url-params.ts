@@ -15,7 +15,7 @@ export interface UrlPreset {
   autoAdvance?: boolean;
   limit?: number;
   offset?: number;
-  theme?: "dark" | "light";
+  theme?: "dark" | "light" | "unicorn";
   embed?: boolean;
   studioHost?: string;
   ingestionHost?: string;
@@ -80,7 +80,7 @@ export function parsePreset(input: URLSearchParams | string): UrlPreset {
   const offset = int(p.get("offset"), 0);
   if (offset !== undefined) preset.offset = offset;
 
-  const theme = enumv(p.get("theme"), ["dark", "light"] as const);
+  const theme = enumv(p.get("theme"), ["dark", "light", "unicorn"] as const);
   if (theme) preset.theme = theme;
 
   const embed = bool(p.get("embed"));

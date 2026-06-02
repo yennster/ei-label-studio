@@ -18,7 +18,7 @@ back to Edge Impulse — all driven by shareable URLs.
   pre-annotation; submitting relabels the sample back in Edge Impulse.
 - **URL-driven** — deep-link presets (project, category, template, filters, theme, embed…) in the
   spirit of [synthetic-data-studio](https://github.com/yennster/synthetic-data-studio/blob/main/docs/url-parameters.md).
-  See `/docs`.
+  See [`docs/url-parameters.md`](docs/url-parameters.md) or the in-app [`/docs`](https://label.jennyspeelman.dev/docs) page.
 - **Embeddable** — `?embed=1` strips the chrome for iframe use.
 
 ## How it works
@@ -57,7 +57,8 @@ Deployed on Vercel.
 
 - An Edge Impulse API key is scoped to a single project, so the project picker shows just that
   project. (Account-wide listing would require JWT login.)
-- For **detect** and **time-series** templates the sample-level label is updated, but region-level
-  boxes/segments are not yet pushed back to Edge Impulse.
+- For **detect** (bounding-box) templates, edited boxes are pushed back to Edge Impulse via the
+  Studio API. For **time-series** templates, the sample-level label is updated, but per-segment
+  annotations are not yet pushed back.
 - The standalone Label Studio Frontend npm package no longer ships a built bundle, so a known-good
   build is vendored in this repo and loaded on demand.

@@ -25,7 +25,7 @@ const PARAMS: Param[] = [
   { name: "autoAdvance", type: "bool", desc: "Jump to the next unlabeled sample after each submit." },
   { name: "limit", type: "int 1–1000", desc: "How many samples to pull into the queue." },
   { name: "offset", type: "int ≥ 0", desc: "Pagination offset into the dataset." },
-  { name: "theme", type: "dark | light", desc: "Force the colour scheme." },
+  { name: "theme", type: "dark | light | unicorn", desc: "Force the colour scheme." },
   { name: "embed", type: "bool", desc: "Hide chrome for embedding the workspace in an iframe." },
   { name: "studioHost", type: "host", desc: "Override the Studio API base (self-hosted / staging EI)." },
   { name: "ingestionHost", type: "host", desc: "Override the Ingestion API base." },
