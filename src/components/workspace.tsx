@@ -8,7 +8,7 @@ import dynamic from "next/dynamic";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { LogoMark } from "@/components/logo";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { ThemeMenu } from "@/components/theme-menu";
 import {
   Boxes,
   ChevronLeft,
@@ -340,7 +340,7 @@ export function Workspace() {
             <LogoMark className="size-5 shrink-0" />
             <span className="truncate text-sm font-semibold tracking-tight">EI · Label Studio</span>
           </Link>
-          <ThemeToggle />
+          <ThemeMenu />
         </div>
         <div className="space-y-3 border-b border-border/60 p-3">
           <Select value={category} onValueChange={(v) => setCategory(v as EICategory)}>

@@ -80,6 +80,7 @@ const LS_THEME = `
   border-color: #e2e8f0 !important;
 }
 .lsf-button_look_danger:hover { background: #f1f5f9 !important; color: #0f172a !important; }
+.lsf-topbar button[aria-label="Settings"] { display: none !important; }
 `;
 
 function injectTheme() {

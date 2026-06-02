@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { ConnectPanel } from "@/components/connect-panel";
+import { UnicornHero } from "@/components/unicorn-decor";
 import { Badge } from "@/components/ui/badge";
 import { AudioLines, ImageIcon, Activity, Link2, Cloud, ShieldCheck } from "lucide-react";
 
@@ -38,6 +39,7 @@ export default function Home() {
           <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-16 sm:px-6 lg:pt-24">
             <div className="grid items-center gap-12 lg:grid-cols-2">
               <div className="space-y-6">
+                <UnicornHero />
                 <Badge
                   variant="secondary"
                   className="gap-1.5 rounded-full border border-border/60 px-3 py-1"

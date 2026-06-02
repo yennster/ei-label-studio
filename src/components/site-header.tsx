@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Wordmark } from "@/components/logo";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { ThemeMenu } from "@/components/theme-menu";
 import { Button } from "@/components/ui/button";
 
 function GithubMark() {
@@ -34,7 +34,7 @@ export function SiteHeader() {
               <GithubMark />
             </a>
           </Button>
-          <ThemeToggle />
+          <ThemeMenu />
         </nav>
       </div>
     </header>
