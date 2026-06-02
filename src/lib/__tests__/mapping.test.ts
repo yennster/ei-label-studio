@@ -57,14 +57,14 @@ describe("sampleToTask", () => {
       ]);
     });
 
-    it("seeds no annotation when the label is missing", () => {
+    it("seeds an empty annotation when the label is missing (so LS opens in edit mode)", () => {
       const task = sampleToTask(baseSample({ label: "" }), 1, "classify");
-      expect(task.annotations).toEqual([]);
+      expect(task.annotations).toEqual([{ result: [] }]);
     });
 
-    it('treats the literal "unlabeled" as no label', () => {
+    it('treats the literal "unlabeled" as no label (seeds empty annotation)', () => {
       const task = sampleToTask(baseSample({ label: "unlabeled" }), 1, "audio");
-      expect(task.annotations).toEqual([]);
+      expect(task.annotations).toEqual([{ result: [] }]);
     });
   });
 
@@ -90,16 +90,16 @@ describe("sampleToTask", () => {
       });
     });
 
-    it("seeds no annotation when dimensions are missing", () => {
+    it("seeds an empty annotation when dimensions are missing (so LS opens in edit mode)", () => {
       const noDims = baseSample({
         boundingBoxes: [{ label: "face", x: 1, y: 1, width: 1, height: 1 }],
       });
-      expect(sampleToTask(noDims, 1, "detect").annotations).toEqual([]);
+      expect(sampleToTask(noDims, 1, "detect").annotations).toEqual([{ result: [] }]);
     });
 
-    it("seeds no annotation when there are no boxes", () => {
+    it("seeds an empty annotation when there are no boxes (so LS opens in edit mode)", () => {
       const noBoxes = baseSample({ imageDimensions: { width: 100, height: 100 } });
-      expect(sampleToTask(noBoxes, 1, "detect").annotations).toEqual([]);
+      expect(sampleToTask(noBoxes, 1, "detect").annotations).toEqual([{ result: [] }]);
     });
   });
 });

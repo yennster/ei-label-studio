@@ -63,6 +63,14 @@ export function sampleToTask(
     }
   }
 
+  // Label Studio treats an empty `annotations` array as "nothing left to
+  // annotate" and shows a "No more annotations" completion screen.  Always
+  // seed at least one annotation (with an empty result) so unlabeled samples
+  // open in edit mode, ready for the user to start labeling.
+  if (annotations.length === 0) {
+    annotations = [{ result: [] }];
+  }
+
   return { id: sample.id, data, predictions, annotations };
 }
 
