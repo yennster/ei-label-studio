@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import type { EICategory, EIProject, EISample, LabelTask, WorkMode } from "./types";
+import type { EIBoundingBox, EICategory, EIProject, EISample, LabelTask, WorkMode } from "./types";
 import type { UrlPreset } from "./url-params";
 
 interface AppState {
@@ -31,7 +31,7 @@ interface AppState {
   setTask: (t: LabelTask | null) => void;
   setLabelFilter: (l: string[]) => void;
   setAutoAdvance: (v: boolean) => void;
-  markLabeled: (sampleId: number, label: string) => void;
+  markLabeled: (sampleId: number, label: string, boundingBoxes?: EIBoundingBox[]) => void;
   reset: () => void;
 }
 
@@ -68,9 +68,11 @@ export const useApp = create<AppState>((set) => ({
   setTask: (task) => set({ task }),
   setLabelFilter: (labelFilter) => set({ labelFilter }),
   setAutoAdvance: (autoAdvance) => set({ autoAdvance }),
-  markLabeled: (sampleId, label) =>
+  markLabeled: (sampleId, label, boundingBoxes) =>
     set((s) => ({
-      samples: s.samples.map((x) => (x.id === sampleId ? { ...x, label } : x)),
+      samples: s.samples.map((x) =>
+        x.id === sampleId ? { ...x, label, ...(boundingBoxes ? { boundingBoxes } : {}) } : x
+      ),
     })),
   reset: () =>
     set({ connected: false, project: null, samples: [], totalCount: 0, activeIndex: 0 }),

@@ -243,7 +243,13 @@ export function Workspace() {
           // Object detection: push the (edited) boxes back to EI as pixels.
           const boxes = boxesFromAnnotation(annotation);
           await setBoundingBoxes(active.id, boxes);
-          markLabeled(active.id, active.label);
+
+          const boxLabels = Array.from(new Set(boxes.map((b) => b.label)))
+            .sort()
+            .join(", ");
+          const newLabel = boxLabels || "unlabeled";
+
+          markLabeled(active.id, newLabel, boxes);
           setLabeledIds((prev) => new Set(prev).add(active.id));
           toast.success(
             boxes.length

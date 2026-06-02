@@ -164,10 +164,15 @@ const LS_THEME = `
 
 
 .lsf-topbar {
-  border-bottom: 1px solid #e9e9ef !important;
+  background-color: var(--card) !important;
+  border-bottom: 1px solid var(--border) !important;
   width: 100% !important;
   min-width: 0 !important;
   box-sizing: border-box !important;
+  color: var(--foreground) !important;
+}
+.lsf-topbar * {
+  color: var(--foreground) !important;
 }
 .lsf-controls { gap: 8px !important; padding: 8px 12px !important; }
 .lsf-controls .lsf-button {
@@ -184,17 +189,81 @@ const LS_THEME = `
   transition: background-color .15s ease, color .15s ease, border-color .15s ease !important;
 }
 .lsf-controls .lsf-button_look_primary {
-  background: #6366f1 !important;
-  color: #fff !important;
+  background: var(--primary) !important;
+  color: var(--primary-foreground) !important;
 }
-.lsf-controls .lsf-button_look_primary:hover { background: #5457e3 !important; }
-.lsf-controls .lsf-button_look_danger {
-  background: transparent !important;
-  color: #64748b !important;
-  border-color: #e2e8f0 !important;
+.lsf-controls .lsf-button_look_primary:hover {
+  background: color-mix(in oklch, var(--primary) 85%, black) !important;
 }
-.lsf-controls .lsf-button_look_danger:hover { background: #f1f5f9 !important; color: #0f172a !important; }
+.lsf-controls .lsf-button_look_danger,
+.lsf-controls .lsf-button_look_normal {
+  background: var(--secondary) !important;
+  color: var(--secondary-foreground) !important;
+  border: 1px solid var(--border) !important;
+}
+.lsf-controls .lsf-button_look_danger:hover,
+.lsf-controls .lsf-button_look_normal:hover {
+  background: var(--accent) !important;
+  color: var(--accent-foreground) !important;
+  border: 1px solid var(--border) !important;
+}
 .lsf-topbar button[aria-label="Settings"] { display: none !important; }
+
+/* Custom variables inside Label Studio matching our tailwind theme */
+.ls-editor,
+[class*="editor--"] {
+  background-color: var(--background) !important;
+  color: var(--foreground) !important;
+}
+
+.lsf-main-view {
+  background-color: var(--background) !important;
+}
+
+[class*="menu--"] {
+  background-color: var(--card) !important;
+  border-left: 1px solid var(--border) !important;
+  color: var(--foreground) !important;
+}
+[class*="menu--"] * {
+  border-color: var(--border) !important;
+}
+
+.lsf-sidepanel,
+.lsf-panel,
+.lsf-region-item,
+.lsf-history,
+.lsf-annotations,
+.lsf-sidebar,
+.lsf-empty-state,
+[class*="header--"],
+[class*="title--"],
+[class*="content--"] {
+  background-color: var(--card) !important;
+  color: var(--foreground) !important;
+}
+
+.lsf-region-item_selected {
+  background-color: var(--accent) !important;
+  color: var(--accent-foreground) !important;
+}
+
+.lsf-labels {
+  background-color: var(--card) !important;
+  border-top: 1px solid var(--border) !important;
+}
+
+.lsf-label,
+.lsf-choice {
+  background-color: var(--secondary);
+  color: var(--secondary-foreground);
+  border: 1px solid var(--border);
+}
+.lsf-label:hover,
+.lsf-choice:hover {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
 
 /* Unicorn theme decorative primary button elements */
 .unicorn .lsf-controls .lsf-button_look_primary {
@@ -285,7 +354,7 @@ export default function LabelerEmbed() {
 
     // Reset body layout inside the iframe to prevent Next.js root layout flex rules
     // from causing alignment offsets in the Label Studio canvas.
-    document.body.className = "bg-white";
+    document.body.className = "bg-background text-foreground";
     document.body.style.display = "block";
     document.body.style.margin = "0";
     document.body.style.padding = "0";

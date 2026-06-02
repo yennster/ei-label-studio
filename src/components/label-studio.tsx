@@ -80,12 +80,12 @@ export default function LabelStudio({ config, task, onSubmit, onSkip, onNav }: L
   }, [config, task]);
 
   return (
-    <div className="h-full w-full bg-white">
+    <div className="h-full w-full bg-background">
       <iframe
         ref={iframeRef}
         src={`/embed/labeler?theme=${resolvedTheme || "dark"}&v=${cacheBuster.current}`}
         title="Label Studio"
-        className="h-full w-full min-w-0 border-0 bg-white"
+        className="h-full w-full min-w-0 border-0 bg-background"
       />
     </div>
   );
