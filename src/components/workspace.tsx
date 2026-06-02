@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { ImperativePanelHandle } from "react-resizable-panels";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import dynamic from "next/dynamic";
@@ -13,6 +14,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
+  PanelRight,
   Plus,
   RefreshCw,
   SkipForward,
@@ -90,6 +92,27 @@ export function Workspace() {
   const [newLabel, setNewLabel] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [resizing, setResizing] = useState(false);
+  const inspectorRef = useRef<ImperativePanelHandle>(null);
+  const didAutoCollapse = useRef(false);
+  const [inspectorCollapsed, setInspectorCollapsed] = useState(false);
+
+  // On narrow screens the editor + two side panels don't fit, so start with the
+  // inspector collapsed (its info is also shown inside the editor). Runs once,
+  // after the panels actually mount.
+  useEffect(() => {
+    const ready = !hydrating && connected && !!project;
+    if (ready && !didAutoCollapse.current) {
+      didAutoCollapse.current = true;
+      if (window.innerWidth < 1280) inspectorRef.current?.collapse();
+    }
+  }, [hydrating, connected, project]);
+
+  const toggleInspector = () => {
+    const p = inspectorRef.current;
+    if (!p) return;
+    if (p.isCollapsed()) p.expand();
+    else p.collapse();
+  };
 
   // On direct loads the in-memory store is empty even when the session cookie
   // is valid. Apply URL presets, then rehydrate from the existing session
@@ -393,6 +416,14 @@ export function Workspace() {
               <Tag className="size-3" />
               {TASK_LABELS[effectiveTask]}
             </Badge>
+            <Button
+              variant={inspectorCollapsed ? "secondary" : "ghost"}
+              size="icon"
+              onClick={toggleInspector}
+              title={inspectorCollapsed ? "Show details panel" : "Hide details panel"}
+            >
+              <PanelRight className="size-4" />
+            </Button>
           </div>
         </div>
         <div className="relative min-h-0 flex-1">
@@ -416,7 +447,17 @@ export function Workspace() {
       <ResizableHandle withHandle onDragging={setResizing} />
 
       {/* Right: inspector */}
-      <ResizablePanel defaultSize={24} minSize={16} maxSize={40} className="min-w-0">
+      <ResizablePanel
+        ref={inspectorRef}
+        collapsible
+        collapsedSize={0}
+        defaultSize={24}
+        minSize={16}
+        maxSize={40}
+        onCollapse={() => setInspectorCollapsed(true)}
+        onExpand={() => setInspectorCollapsed(false)}
+        className="min-w-0"
+      >
       <aside className="flex h-full min-h-0 flex-col gap-4 overflow-y-auto p-4">
         <div className="space-y-1.5">
           <h2 className="text-sm font-semibold leading-tight">{project.name}</h2>

@@ -67,7 +67,7 @@ export default function LabelStudio({ config, task, onSubmit, onSkip, onNav }: L
         ref={iframeRef}
         src="/embed/labeler"
         title="Label Studio"
-        className="h-full w-full min-w-[820px] border-0 bg-white"
+        className="h-full w-full min-w-[760px] border-0 bg-white"
       />
     </div>
   );
