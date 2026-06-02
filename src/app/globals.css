@@ -221,6 +221,12 @@
   mask-image: radial-gradient(70% 60% at 50% 0%, black, transparent 75%);
 }
 
+/* ---- Unicorn site header — pink frosted glass ---- */
+.unicorn .site-header {
+  background-color: oklch(0.92 0.06 335 / 0.85);
+  border-bottom-color: oklch(0.85 0.08 335);
+}
+
 /* ---- Unicorn decorative utilities (CSS only, no external images) ---- */
 
 /* Gradient-clipped rainbow text helper for headings / emphasis. */
