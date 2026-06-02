@@ -64,8 +64,8 @@ const LS_THEME = `
   width: 100% !important;
   max-width: 100% !important;
   min-width: 0 !important;
-  height: 100vh !important;
-  max-height: 100vh !important;
+  height: 100% !important;
+  max-height: 100% !important;
   overflow: hidden !important;
   display: flex !important;
   flex-direction: column !important;
@@ -74,8 +74,8 @@ const LS_THEME = `
 
 /* Force the content wrapper to take exactly the remaining height and not overflow vertically in desktop mode */
 [class*="main-content-wrapper--"] {
-  height: calc(100vh - 48px) !important;
-  max-height: calc(100vh - 48px) !important;
+  height: calc(100% - 48px) !important;
+  max-height: calc(100% - 48px) !important;
   min-height: 0 !important;
   flex: 1 !important;
   display: flex !important;
@@ -174,12 +174,17 @@ const LS_THEME = `
 .lsf-topbar * {
   color: var(--foreground) !important;
 }
-.lsf-controls { gap: 8px !important; padding: 8px 12px !important; }
+@media (max-width: 520px) {
+  .ls-root .lsf-current-task {
+    display: none !important;
+  }
+}
+.lsf-controls { gap: 6px !important; padding: 8px 16px 8px 8px !important; }
 .lsf-controls .lsf-button {
   height: 34px !important;
   width: auto !important;
   min-width: 0 !important;
-  padding: 0 16px !important;
+  padding: 0 12px !important;
   border-radius: 8px !important;
   font-size: 14px !important;
   font-weight: 500 !important;
@@ -258,7 +263,7 @@ html.unicorn .ls-root .lsf-region-item_selected {
 
 html.dark .ls-root .lsf-labels,
 html.unicorn .ls-root .lsf-labels {
-  background-color: var(--card) !important;
+  background-color: transparent !important;
   border-top: 1px solid var(--border) !important;
 }
 
@@ -370,12 +375,82 @@ html.unicorn .ls-root .lsf-entities__sort {
   color: var(--foreground) !important;
 }
 
-/* Label badges / choice buttons - Preserve dynamic background and left border colors, only override text and hotkey colors for dark/unicorn modes */
+/* Label badges / choice buttons - Preserve dynamic background and left border colors, only override text and hotkey colors for dark mode */
 html.dark .ls-root .lsf-label__text,
-html.dark .ls-root .lsf-label__hotkey,
-html.unicorn .ls-root .lsf-label__text,
-html.unicorn .ls-root .lsf-label__hotkey {
+html.dark .ls-root .lsf-label__hotkey {
   color: #ffffff !important;
+}
+
+/* Ant Design Dropdown Menu overrides for dark and unicorn themes */
+html.dark .ant-dropdown-menu,
+html.unicorn .ant-dropdown-menu {
+  background-color: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  padding: 4px !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+html.dark .ant-dropdown-menu-item,
+html.unicorn .ant-dropdown-menu-item {
+  color: var(--foreground) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  border-radius: 6px !important;
+  padding: 6px 12px !important;
+  line-height: 1.4 !important;
+}
+
+/* Hover state */
+html.dark .ant-dropdown-menu-item:hover,
+html.unicorn .ant-dropdown-menu-item:hover {
+  background-color: var(--accent) !important;
+  color: var(--accent-foreground) !important;
+}
+
+/* Selected state in dark mode */
+html.dark .ant-dropdown-menu-item-selected {
+  background-color: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+}
+
+/* Selected state in unicorn mode */
+html.unicorn .ant-dropdown-menu-item-selected {
+  background-color: color-mix(in oklch, var(--primary) 15%, transparent) !important;
+  color: var(--primary) !important;
+}
+
+/* Selected item hover */
+html.dark .ant-dropdown-menu-item-selected:hover {
+  background-color: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+}
+html.unicorn .ant-dropdown-menu-item-selected:hover {
+  background-color: color-mix(in oklch, var(--primary) 25%, transparent) !important;
+  color: var(--primary) !important;
+}
+
+/* Normalize font sizes for all sort menu components and their icons/text */
+.ant-dropdown-menu-item,
+.lsf-sort-menu__option-inner,
+.lsf-sort-menu__title,
+.lsf-sort-menu__title * {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+}
+
+.lsf-sort-menu__icon,
+.lsf-sort-menu__icon * {
+  font-size: 13px !important;
+  width: 14px !important;
+  height: 14px !important;
+}
+
+/* Normalize the sort trigger button size */
+.ls-root .lsf-entities__sort,
+.ls-root .lsf-entities__sort * {
+  font-size: 13px !important;
+  font-weight: 500 !important;
 }
 
 /* Unicorn theme decorative primary button elements */
@@ -474,8 +549,8 @@ export default function LabelerEmbed() {
     document.body.style.margin = "0";
     document.body.style.padding = "0";
     document.body.style.overflow = "hidden";
-    document.body.style.width = "100vw";
-    document.body.style.height = "100vh";
+    document.body.style.width = "100%";
+    document.body.style.height = "100%";
 
     // Inject the theme stylesheet on mount so it is active before Label Studio builds its DOM
     injectTheme();
@@ -542,5 +617,5 @@ export default function LabelerEmbed() {
     };
   }, []);
 
-  return <div ref={rootRef} className="ls-root" style={{ height: "100vh", width: "100%" }} />;
+  return <div ref={rootRef} className="ls-root" style={{ height: "100%", width: "100%" }} />;
 }
