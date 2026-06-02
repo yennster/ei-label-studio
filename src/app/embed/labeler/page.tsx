@@ -117,6 +117,10 @@ export default function LabelerEmbed() {
           if (!rootRef.current) return;
           instanceRef.current?.destroy?.();
           rootRef.current.innerHTML = "";
+          // Inject the theme BEFORE LS builds its DOM so the editor is full-width
+          // from the start — otherwise Konva measures the cramped default width
+          // and positions the image canvas off-screen.
+          injectTheme();
           instanceRef.current = new LabelStudioCtor(rootRef.current, {
             config,
             task,
@@ -126,7 +130,6 @@ export default function LabelerEmbed() {
             onUpdateAnnotation: (_ls: unknown, a: unknown) => post("submit", serializeAnnotation(a)),
             onSkipTask: () => post("skip"),
           });
-          injectTheme();
         })
         .catch(() => {
           if (rootRef.current) {

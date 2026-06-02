@@ -58,11 +58,17 @@ export default function LabelStudio({ config, task, onSubmit, onSkip, onNav }: L
   }, [config, task]);
 
   return (
-    <iframe
-      ref={iframeRef}
-      src="/embed/labeler"
-      title="Label Studio"
-      className="h-full w-full border-0 bg-white"
-    />
+    // The Label Studio editor needs a comfortable width for its full layout
+    // (image + regions/labels panels). Below that we scroll the editor
+    // horizontally inside the center column rather than letting LS render a
+    // broken, clipped layout — the surrounding page never grows.
+    <div className="h-full w-full overflow-x-auto bg-white">
+      <iframe
+        ref={iframeRef}
+        src="/embed/labeler"
+        title="Label Studio"
+        className="h-full w-full min-w-[820px] border-0 bg-white"
+      />
+    </div>
   );
 }
