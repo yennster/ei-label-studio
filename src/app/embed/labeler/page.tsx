@@ -239,7 +239,7 @@ body {
   color: var(--accent-foreground) !important;
   border: 1px solid var(--border) !important;
 }
-.lsf-topbar button[aria-label="Settings"] { display: none !important; }
+.lsf-topbar button[aria-label="Settings"]:not([class*="dynamic-preannotations"]) { display: none !important; }
 
 /* Custom variables inside Label Studio matching our tailwind theme */
 .ls-editor,
@@ -425,6 +425,22 @@ html.unicorn .lsf-dynamic-preannotations-control * {
 html.dark .ls-root :is(h1, h2, h3, h4, h5, h6),
 html.unicorn .ls-root :is(h1, h2, h3, h4, h5, h6) {
   color: var(--foreground) !important;
+}
+
+/* Override Label Studio heading sizes to make them clean, modern, and readable */
+.ls-root h1 {
+  font-size: 20px !important;
+  font-weight: 600 !important;
+}
+.ls-root h2 {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+}
+.ls-root :is(h3, h4, h5, h6, .lsf-header) {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  margin-top: 14px !important;
+  margin-bottom: 6px !important;
 }
 
 /* Custom toggles (lsf-toggle) theme overrides */

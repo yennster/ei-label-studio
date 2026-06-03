@@ -75,6 +75,7 @@ export async function GET(req: Request) {
           // them in first, so the queue always surfaces what needs work.
           const unlabeledQp = new URLSearchParams();
           if (category) unlabeledQp.set("category", category);
+          unlabeledQp.set("labels", JSON.stringify(["", "unlabeled"]));
           unlabeledQp.set("limit", String(limitVal));
           unlabeledQp.set("offset", String(offsetVal));
           unlabeledQp.set("excludeSensors", "false");
