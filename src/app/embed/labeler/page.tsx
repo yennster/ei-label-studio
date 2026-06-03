@@ -1215,6 +1215,32 @@ export default function LabelerEmbed() {
       else if (e.key === "]") window.parent.postMessage({ source: "ls-embed", type: "nav", dir: 1 }, origin);
     }
 
+    // The "Auto accept suggestions" popover (.lsf-dynamic-preannotations-control) is
+    // rendered position:absolute, centered over the canvas by the LS bundle. Pin it
+    // into the topbar's right side — vertically centered on the Auto-Annotation bar —
+    // via inline !important styles the moment it appears. Inline beats the bundle's
+    // stylesheet (and any stale cached CSS); we restyle in place (never reparent) so
+    // React keeps ownership of the node.
+    const positionAutoAccept = () => {
+      const el = document.querySelector(".lsf-dynamic-preannotations-control") as HTMLElement | null;
+      if (!el || el.dataset.eiPlaced === "1") return;
+      const bar = document.querySelector(".lsf-dynamic-preannotations") as HTMLElement | null;
+      const rect = bar?.getBoundingClientRect();
+      const centerY = rect && rect.height ? Math.round(rect.top + rect.height / 2) : 30;
+      el.dataset.eiPlaced = "1";
+      const s = el.style;
+      s.setProperty("position", "fixed", "important");
+      s.setProperty("top", `${centerY}px`, "important");
+      s.setProperty("right", "16px", "important");
+      s.setProperty("left", "auto", "important");
+      s.setProperty("bottom", "auto", "important");
+      s.setProperty("transform", "translateY(-50%)", "important");
+      s.setProperty("margin", "0", "important");
+      s.setProperty("z-index", "200", "important");
+    };
+    const popoverObserver = new MutationObserver(positionAutoAccept);
+    popoverObserver.observe(document.body, { childList: true, subtree: true });
+
     window.addEventListener("message", onMessage);
     window.addEventListener("keydown", onKeyDown);
     post("ready");
@@ -1224,6 +1250,7 @@ export default function LabelerEmbed() {
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("error", onError);
       window.removeEventListener("unhandledrejection", onUnhandledRejection);
+      popoverObserver.disconnect();
       Element.prototype.scrollIntoView = originalScrollIntoView;
       if (originalScrollIntoViewIfNeeded) {
         (Element.prototype as any).scrollIntoViewIfNeeded = originalScrollIntoViewIfNeeded;
