@@ -26,7 +26,7 @@ export function sampleToTask(
     data.timeseries = mediaUrl(projectId, sample.id, "timeseries");
   }
 
-  const hasLabel = sample.label && sample.label !== "unlabeled";
+  const hasLabel = sample.label && sample.label !== "unlabeled" && sample.label !== "-";
 
   if (task === "classify" || task === "audio") {
     // Seed the existing label as an editable annotation so the sample opens

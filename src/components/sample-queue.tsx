@@ -33,7 +33,7 @@ export function SampleQueue({
           const Icon = MODALITY_ICON[detectModality(s)];
           const active = i === activeIndex;
           const done = labeledIds.has(s.id);
-          const unlabeled = !s.label || s.label === "unlabeled";
+          const unlabeled = !s.label || s.label === "unlabeled" || s.label === "-";
           return (
             <li key={s.id}>
               <button

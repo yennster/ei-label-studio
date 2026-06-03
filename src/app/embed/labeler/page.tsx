@@ -403,23 +403,37 @@ html.dark .lsf-dynamic-preannotations-control *,
 html.unicorn .lsf-dynamic-preannotations-control * {
   color: var(--foreground) !important;
 }
-/* Pin the "Auto accept suggestions" popover to the top-right of the viewport, in
-   the topbar band (right of the toggle) — always visible and never over the image.
-   position: fixed makes it viewport-relative, dodging the centered toggle context
-   that pushed earlier attempts over the canvas or off-screen. */
 .lsf-dynamic-preannotations-control {
-  position: fixed !important;
-  top: 6px !important;
-  right: 16px !important;
-  left: auto !important;
-  bottom: auto !important;
-  transform: none !important;
-  z-index: 101 !important;
-  margin: 0 !important;
-  padding: 6px 12px !important;
-  white-space: nowrap !important;
+  display: none !important;
 }
-
+#ei-auto-accept-wrapper {
+  display: flex !important;
+  align-items: center !important;
+}
+.ei-auto-accept-label {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: var(--foreground) !important;
+  cursor: pointer !important;
+  user-select: none !important;
+  margin-left: 20px !important;
+  padding: 4px 8px !important;
+  border-radius: 4px !important;
+  background-color: transparent !important;
+  transition: background-color 0.15s ease !important;
+}
+.ei-auto-accept-label:hover {
+  background-color: var(--accent) !important;
+}
+.ei-auto-accept-label input[type="checkbox"] {
+  accent-color: var(--primary) !important;
+  width: 14px !important;
+  height: 14px !important;
+  cursor: pointer !important;
+}
 /* <Header> tag text — LS renders it as a heading whose default color is dark,
    leaving the SAM mode hints near-invisible on a dark canvas. Make them readable. */
 html.dark .ls-root :is(h1, h2, h3, h4, h5, h6),
@@ -1231,31 +1245,50 @@ export default function LabelerEmbed() {
       else if (e.key === "]") window.parent.postMessage({ source: "ls-embed", type: "nav", dir: 1 }, origin);
     }
 
-    // The "Auto accept suggestions" popover (.lsf-dynamic-preannotations-control) is
-    // rendered position:absolute, centered over the canvas by the LS bundle. Pin it
-    // into the topbar's right side — vertically centered on the Auto-Annotation bar —
-    // via inline !important styles the moment it appears. Inline beats the bundle's
-    // stylesheet (and any stale cached CSS); we restyle in place (never reparent) so
-    // React keeps ownership of the node.
-    const positionAutoAccept = () => {
-      const el = document.querySelector(".lsf-dynamic-preannotations-control") as HTMLElement | null;
-      if (!el || el.dataset.eiPlaced === "1") return;
-      const bar = document.querySelector(".lsf-dynamic-preannotations") as HTMLElement | null;
-      const rect = bar?.getBoundingClientRect();
-      const centerY = rect && rect.height ? Math.round(rect.top + rect.height / 2) : 30;
-      el.dataset.eiPlaced = "1";
-      const s = el.style;
-      s.setProperty("position", "fixed", "important");
-      s.setProperty("top", `${centerY}px`, "important");
-      s.setProperty("right", "16px", "important");
-      s.setProperty("left", "auto", "important");
-      s.setProperty("bottom", "auto", "important");
-      s.setProperty("transform", "translateY(-50%)", "important");
-      s.setProperty("margin", "0", "important");
-      s.setProperty("z-index", "9999", "important");
+    // Inline custom checkbox injection next to the Auto-Annotation toggle
+    const injectCustomCheckbox = () => {
+      const toggle = document.querySelector(".lsf-dynamic-preannotations .lsf-toggle");
+      const parent = toggle?.parentElement;
+      if (!parent || document.getElementById("ei-auto-accept-wrapper")) return;
+
+      const wrapper = document.createElement("div");
+      wrapper.id = "ei-auto-accept-wrapper";
+      wrapper.innerHTML = `
+        <label class="ei-auto-accept-label">
+          <input type="checkbox" id="ei-auto-accept-checkbox" />
+          Auto accept
+        </label>
+      `;
+      parent.appendChild(wrapper);
+
+      const checkbox = wrapper.querySelector("#ei-auto-accept-checkbox") as HTMLInputElement;
+      checkbox.addEventListener("change", (e) => {
+        const checked = (e.target as HTMLInputElement).checked;
+        const ls = instanceRef.current as any;
+        if (ls?.store?.setAutoAcceptSuggestions) {
+          ls.store.setAutoAcceptSuggestions(checked);
+        }
+      });
     };
-    const popoverObserver = new MutationObserver(positionAutoAccept);
+
+    const popoverObserver = new MutationObserver(injectCustomCheckbox);
     popoverObserver.observe(document.body, { childList: true, subtree: true });
+
+    const syncInterval = setInterval(() => {
+      const wrapper = document.getElementById("ei-auto-accept-wrapper");
+      const ls = instanceRef.current as any;
+      const autoAnnotateEnabled = ls?.store?.autoAnnotation;
+      if (wrapper) {
+        wrapper.style.display = autoAnnotateEnabled ? "flex" : "none";
+      }
+
+      const cb = document.getElementById("ei-auto-accept-checkbox") as HTMLInputElement | null;
+      const storeVal = ls?.store?.autoAcceptSuggestions;
+      if (cb && storeVal !== undefined && cb.checked !== storeVal) {
+        cb.checked = storeVal;
+      }
+    }, 200);
+
 
     window.addEventListener("message", onMessage);
     window.addEventListener("keydown", onKeyDown);
@@ -1267,6 +1300,7 @@ export default function LabelerEmbed() {
       window.removeEventListener("error", onError);
       window.removeEventListener("unhandledrejection", onUnhandledRejection);
       popoverObserver.disconnect();
+      clearInterval(syncInterval);
       Element.prototype.scrollIntoView = originalScrollIntoView;
       if (originalScrollIntoViewIfNeeded) {
         (Element.prototype as any).scrollIntoViewIfNeeded = originalScrollIntoViewIfNeeded;

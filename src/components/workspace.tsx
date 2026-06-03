@@ -95,7 +95,6 @@ export function Workspace() {
     limit,
   } = useApp();
 
-  const [testResult, setTestResult] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [hydrating, setHydrating] = useState(!connected);
   const [labeledIds, setLabeledIds] = useState<Set<number>>(new Set());
@@ -114,10 +113,6 @@ export function Workspace() {
   useEffect(() => {
     preload(LS_VENDOR_JS, { as: "script" });
     preload(LS_VENDOR_CSS, { as: "style" });
-    fetch("/api/ei/test-labels")
-      .then(r => r.json())
-      .then(d => setTestResult(d.results))
-      .catch(e => console.error("TEST LABELS ERR:", e));
   }, []);
 
   // On narrow screens the editor + two side panels don't fit, so start with the
@@ -642,12 +637,7 @@ export function Workspace() {
           <PanelRightClose className="size-4" />
         )}
       </Button>
-      {testResult && (
-        <div style={{ position: "fixed", bottom: 0, right: 0, zIndex: 99999, background: "rgba(0,0,0,0.9)", color: "lime", padding: 10, maxHeight: "50vh", overflow: "auto", fontSize: 10, width: 400 }}>
-          <h3>TEST LABELS</h3>
-          <pre>{JSON.stringify(testResult, null, 2)}</pre>
-        </div>
-      )}
+
     </div>
   );
 }

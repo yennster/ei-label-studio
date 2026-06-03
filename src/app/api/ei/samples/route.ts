@@ -45,6 +45,7 @@ export async function GET(req: Request) {
           ?.filter((l) => l.dataCount > 0)
           ?.map((l) => l.label) ?? [];
 
+
         if (activeLabels.length > 1) {
           const limitVal = Number(url.searchParams.get("limit") || "200");
           const offsetVal = Number(url.searchParams.get("offset") || "0");
@@ -75,7 +76,7 @@ export async function GET(req: Request) {
           // them in first, so the queue always surfaces what needs work.
           const unlabeledQp = new URLSearchParams();
           if (category) unlabeledQp.set("category", category);
-          unlabeledQp.set("labels", JSON.stringify(["", "unlabeled"]));
+          unlabeledQp.set("labels", JSON.stringify(["-", "", "unlabeled"]));
           unlabeledQp.set("limit", String(limitVal));
           unlabeledQp.set("offset", String(offsetVal));
           unlabeledQp.set("excludeSensors", "false");
@@ -83,8 +84,9 @@ export async function GET(req: Request) {
             session,
             `/${session.projectId}/raw-data?${unlabeledQp}`,
           );
+
           const unlabeledSamples = (unlabeledRes.data?.samples ?? []).filter(
-            (s) => !s.label || s.label === "unlabeled",
+            (s) => !s.label || s.label === "unlabeled" || s.label === "-",
           );
 
           const interleaved: EISample[] = [];
