@@ -948,8 +948,15 @@ export default function LabelerEmbed() {
     const originalXhrOpen = XMLHttpRequest.prototype.open;
 
     window.fetch = async function (input, init) {
-      const urlStr = typeof input === "string" ? input : (input as Request).url;
-      if (urlStr.includes("/predict") || urlStr.includes("/predictions")) {
+      let urlStr = "";
+      if (typeof input === "string") {
+        urlStr = input;
+      } else if (input instanceof URL) {
+        urlStr = input.toString();
+      } else if (input && typeof input === "object" && "url" in input) {
+        urlStr = (input as any).url;
+      }
+      if (urlStr && (urlStr.includes("/predict") || urlStr.includes("/predictions"))) {
         const redirectUrl = "/api/ei/predict";
         try {
           const res = await originalFetch(redirectUrl, init);
