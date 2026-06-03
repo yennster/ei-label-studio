@@ -60,6 +60,11 @@ function serializeAnnotation(annotation: unknown): unknown {
 
 /* Restyle Label Studio's action bar to match the app's shadcn buttons. */
 const LS_THEME = `
+body {
+  background-color: var(--background) !important;
+  background: var(--background) !important;
+}
+
 /* The editor centers itself with \`margin: 0 auto\` and clamps to a fixed
    300px width under its max-width:760px breakpoint. Inside our iframe that
    leaves large dead margins either side of the canvas. Anchor it left and
