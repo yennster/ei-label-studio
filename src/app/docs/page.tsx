@@ -20,7 +20,7 @@ const PARAMS: Param[] = [
   { name: "project", alias: "eiProject", type: "int ≥ 1", desc: "Project ID to connect to. Not required when apiKey is provided (API keys are scoped to a single project)." },
   { name: "category", type: "training | testing | anomaly", desc: "Which dataset split to load." },
   { name: "labels", type: "comma list", desc: "Filter the sample queue to these labels, e.g. labels=dog,cat." },
-  { name: "task", type: "classify | detect | audio | timeseries", desc: "Force a labeling template instead of auto-detecting per sample." },
+  { name: "task", type: "classify | detect | audio | timeseries | sam", desc: "Force a labeling template instead of auto-detecting per sample." },
   { name: "mode", type: "relabel | import", desc: "Relabel existing samples, or import-and-label new data." },
   { name: "autoAdvance", type: "bool", desc: "Jump to the next unlabeled sample after each submit." },
   { name: "limit", type: "int 1–1000", desc: "How many samples to pull into the queue." },
