@@ -43,7 +43,7 @@ import { SampleQueue } from "@/components/sample-queue";
 import { cn } from "@/lib/utils";
 import { useApp } from "@/lib/store";
 import { LS_VENDOR_CSS, LS_VENDOR_JS } from "@/lib/ls-vendor";
-import { getSamples, getProjects, relabel, setBoundingBoxes } from "@/lib/ei-client";
+import { getSamples, getProjects, relabel, setBoundingBoxes, getProjectMetadata } from "@/lib/ei-client";
 import { parsePreset } from "@/lib/url-params";
 import { detectModality } from "@/lib/modality";
 import { defaultTaskFor, projectTypeLabel } from "@/lib/project-type";
@@ -64,6 +64,7 @@ const TASK_LABELS: Record<LabelTask, string> = {
   classify: "Image · classify",
   detect: "Image · detect",
   audio: "Audio · classify",
+  transcribe: "Audio · transcribe",
   timeseries: "Time-series",
 };
 
@@ -86,12 +87,16 @@ export function Workspace() {
     setCategory,
     setTask,
     markLabeled,
+    labelFilter,
+    setLabelFilter,
+    limit,
   } = useApp();
 
   const [loading, setLoading] = useState(true);
   const [hydrating, setHydrating] = useState(!connected);
   const [labeledIds, setLabeledIds] = useState<Set<number>>(new Set());
   const [customLabels, setCustomLabels] = useState<string[]>([]);
+  const [metadataLabels, setMetadataLabels] = useState<string[]>([]);
   const [newLabel, setNewLabel] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [resizing, setResizing] = useState(false);
@@ -160,7 +165,11 @@ export function Workspace() {
   const loadSamples = useCallback(async () => {
     setLoading(true);
     try {
-      const { samples: list } = await getSamples({ category, limit: 200 });
+      const { samples: list } = await getSamples({
+        category,
+        limit,
+        labels: labelFilter.length ? labelFilter : undefined,
+      });
       setSamples(list, list.length);
       setLabeledIds(new Set());
     } catch (e) {
@@ -168,7 +177,22 @@ export function Workspace() {
     } finally {
       setLoading(false);
     }
-  }, [category, setSamples]);
+  }, [category, limit, labelFilter, setSamples]);
+
+  useEffect(() => {
+    if (connected && project) {
+      void getProjectMetadata()
+        .then((res) => {
+          if (res?.metadata?.type === "classes") {
+            const labels = res.metadata.all?.labels?.map((l: any) => l.label) ?? [];
+            setMetadataLabels(labels);
+          }
+        })
+        .catch(() => {});
+    } else {
+      setMetadataLabels([]);
+    }
+  }, [connected, project]);
 
   useEffect(() => {
     if (connected && project) void loadSamples();
@@ -211,10 +235,11 @@ export function Workspace() {
       addLabel(s.label);
       s.boundingBoxes?.forEach((b) => addLabel(b.label));
     }
+    for (const l of metadataLabels) set.add(l);
     for (const l of customLabels) set.add(l);
     addLabel(active?.label);
     return Array.from(set).sort();
-  }, [samples, customLabels, active]);
+  }, [samples, metadataLabels, customLabels, active]);
 
   const config = useMemo(
     () =>
@@ -286,16 +311,16 @@ export function Workspace() {
           return;
         }
 
-        // classify / audio
+        // classify / audio / transcribe
         const label = labelFromAnnotation(annotation);
-        if (!label) {
-          toast.error("Pick a class before submitting.");
+        if (label === null || label === undefined) {
+          toast.error(effectiveTask === "transcribe" ? "Add a transcription before submitting." : "Pick a class before submitting.");
           return;
         }
         await relabel(active.id, label);
         markLabeled(active.id, label);
         setLabeledIds((prev) => new Set(prev).add(active.id));
-        toast.success(`Relabeled to “${label}”`);
+        toast.success(effectiveTask === "transcribe" ? `Transcribed to “${label}”` : `Relabeled to “${label}”`);
         advance();
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "Save failed");
@@ -361,16 +386,35 @@ export function Workspace() {
           <ThemeMenu />
         </div>
         <div className="space-y-3 border-b border-border/60 p-3">
-          <Select value={category} onValueChange={(v) => setCategory(v as EICategory)}>
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="training">Training set</SelectItem>
-              <SelectItem value="testing">Testing set</SelectItem>
-              <SelectItem value="anomaly">Anomaly set</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="grid grid-cols-2 gap-2">
+            <Select value={category} onValueChange={(v) => setCategory(v as EICategory)}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="training">Training set</SelectItem>
+                <SelectItem value="testing">Testing set</SelectItem>
+                <SelectItem value="anomaly">Anomaly set</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={labelFilter[0] || "all"}
+              onValueChange={(v) => setLabelFilter(v === "all" ? [] : [v])}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="All labels" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All labels</SelectItem>
+                {metadataLabels.map((l) => (
+                  <SelectItem key={l} value={l}>
+                    {l}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span>
               {labeledIds.size}/{samples.length} labeled
@@ -498,6 +542,7 @@ export function Workspace() {
               <SelectItem value="classify">Image · classify</SelectItem>
               <SelectItem value="detect">Image · detect (boxes)</SelectItem>
               <SelectItem value="audio">Audio · classify</SelectItem>
+              <SelectItem value="transcribe">Audio · transcribe</SelectItem>
               <SelectItem value="timeseries">Time-series</SelectItem>
             </SelectContent>
           </Select>

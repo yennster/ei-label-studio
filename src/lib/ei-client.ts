@@ -44,6 +44,11 @@ export async function getProjects(): Promise<EIProject[]> {
   return body.projects ?? [];
 }
 
+export async function getProjectMetadata(): Promise<{ metadata?: any }> {
+  const res = await fetch("/api/ei/project-metadata");
+  return jsonOrThrow(res);
+}
+
 export interface SamplesQuery {
   category?: EICategory;
   labels?: string[];

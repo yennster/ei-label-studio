@@ -5,7 +5,7 @@ export type EICategory = "training" | "testing" | "anomaly";
 export type Modality = "image" | "audio" | "timeseries" | "video" | "unknown";
 
 /** Labeling template chosen for the workspace. */
-export type LabelTask = "classify" | "detect" | "audio" | "timeseries";
+export type LabelTask = "classify" | "detect" | "audio" | "timeseries" | "transcribe";
 
 export type WorkMode = "relabel" | "import";
 

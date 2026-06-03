@@ -20,7 +20,7 @@ export function sampleToTask(
 
   if (task === "classify" || task === "detect") {
     data.image = mediaUrl(projectId, sample.id, "image");
-  } else if (task === "audio") {
+  } else if (task === "audio" || task === "transcribe") {
     data.audio = mediaUrl(projectId, sample.id, "audio");
   } else {
     data.timeseries = mediaUrl(projectId, sample.id, "timeseries");
@@ -34,6 +34,13 @@ export function sampleToTask(
     if (hasLabel) {
       const result: LSResult[] = [
         { from_name: "label", to_name: "media", type: "choices", value: { choices: [sample.label] } },
+      ];
+      annotations = [{ result }];
+    }
+  } else if (task === "transcribe") {
+    if (hasLabel) {
+      const result: LSResult[] = [
+        { from_name: "label", to_name: "media", type: "textarea", value: { text: [sample.label] } },
       ];
       annotations = [{ result }];
     }
@@ -119,11 +126,21 @@ export function boxesFromAnnotation(annotation: unknown): EIBoundingBox[] {
  * annotation (classify / audio templates).
  */
 export function labelFromAnnotation(annotation: unknown): string | null {
-  const a = annotation as { result?: Array<{ type?: string; value?: { choices?: string[]; labels?: string[] } }> };
+  const a = annotation as {
+    result?: Array<{
+      type?: string;
+      value?: {
+        choices?: string[];
+        labels?: string[];
+        text?: string[];
+      };
+    }>;
+  };
   if (!a?.result) return null;
   for (const r of a.result) {
     if (r.value?.choices?.length) return r.value.choices[0];
     if (r.value?.labels?.length) return r.value.labels[0];
+    if (r.value?.text?.length) return r.value.text[0];
   }
   return null;
 }

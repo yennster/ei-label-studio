@@ -15,7 +15,12 @@ export async function GET(req: Request) {
   const category = url.searchParams.get("category");
   if (category) qp.set("category", category);
   const labels = url.searchParams.get("labels");
-  if (labels) qp.set("labels", labels);
+  if (labels) {
+    const list = labels.split(",").map((s) => s.trim()).filter(Boolean);
+    if (list.length) {
+      qp.set("labels", JSON.stringify(list));
+    }
+  }
   qp.set("limit", url.searchParams.get("limit") || "200");
   qp.set("offset", url.searchParams.get("offset") || "0");
   // We only need metadata for the queue + modality detection.

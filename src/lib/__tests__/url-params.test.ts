@@ -72,6 +72,7 @@ describe("parsePreset", () => {
   describe("task / mode enums", () => {
     it("parses task", () => {
       expect(parsePreset("task=detect").task).toBe("detect");
+      expect(parsePreset("task=transcribe").task).toBe("transcribe");
     });
 
     it("drops an invalid task", () => {

@@ -54,12 +54,18 @@ export async function GET(
     });
   }
 
-  // Image / audio: proxy the binary, forwarding Range for audio seeking.
-  const path = kind === "audio" ? `/${pid}/raw-data/${sid}/wav` : `/${pid}/raw-data/${sid}/image`;
-  const range = req.headers.get("range") ?? undefined;
-  const upstream = await studioMedia(session, path, range ? { Range: range } : undefined);
+  // Image / audio: proxy the binary.
+  // Note:
+  // 1. For audio, the Edge Impulse API expects the required 'axisIx' query parameter (usually 0).
+  // 2. We do not forward the browser's Range header to the Edge Impulse API
+  //    because the Edge Impulse raw-data binary endpoints do not support Range requests
+  //    and will return HTTP 400 Bad Request if a Range header is present.
+  const path = kind === "audio" 
+    ? `/${pid}/raw-data/${sid}/wav?axisIx=0` 
+    : `/${pid}/raw-data/${sid}/image`;
+  const upstream = await studioMedia(session, path);
 
-  if (!upstream.ok && upstream.status !== 206) {
+  if (!upstream.ok) {
     return NextResponse.json(
       { success: false, error: `Edge Impulse media error (${upstream.status})` },
       { status: upstream.status || 502 },

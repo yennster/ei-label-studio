@@ -65,7 +65,7 @@ export function parsePreset(input: URLSearchParams | string): UrlPreset {
     if (list.length) preset.labels = list;
   }
 
-  const task = enumv(p.get("task"), ["classify", "detect", "audio", "timeseries"] as const);
+  const task = enumv(p.get("task"), ["classify", "detect", "audio", "timeseries", "transcribe"] as const);
   if (task) preset.task = task;
 
   const mode = enumv(p.get("mode"), ["relabel", "import"] as const);
