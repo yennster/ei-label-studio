@@ -1183,9 +1183,13 @@ export default function LabelerEmbed() {
                   console.log("[SAM] /api/ei/predict", res.status, data);
                   if (!res.ok) {
                     post("error", "Auto-Annotation failed: " + (data?.error || res.status));
-                    throw new Error(String(res.status));
+                    return { results: [] };
                   }
                   return data;
+                }).catch((err) => {
+                  console.error("[SAM] predict fetch error", err);
+                  post("error", "Auto-Annotation failed: network error");
+                  return { results: [] };
                 });
                 // Backend bbox/brush results omit original_width/height; add them back
                 // so the suggestions render and map correctly.
