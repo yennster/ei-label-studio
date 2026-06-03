@@ -368,7 +368,21 @@ html.unicorn .ls-root .lsf-dynamic-preannotations * {
   color: var(--foreground) !important;
 }
 
-/* Auto-annotation settings dropdown theme overrides */
+/* Ensure the toggle and its text label sit inline and do not overlap */
+.ls-root .lsf-dynamic-preannotations .lsf-field-label_placement_right {
+  display: flex !important;
+  flex-direction: row-reverse !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+.ls-root .lsf-dynamic-preannotations .lsf-field-label__text {
+  padding: 0 !important;
+  margin: 0 !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+}
+
+/* Auto-annotation settings dropdown theme and layout overrides */
 html.dark .ls-root .lsf-dynamic-preannotations-control,
 html.unicorn .ls-root .lsf-dynamic-preannotations-control {
   background-color: var(--card) !important;
@@ -379,6 +393,15 @@ html.unicorn .ls-root .lsf-dynamic-preannotations-control {
 html.dark .ls-root .lsf-dynamic-preannotations-control *,
 html.unicorn .ls-root .lsf-dynamic-preannotations-control * {
   color: var(--foreground) !important;
+}
+.ls-root .lsf-dynamic-preannotations-control {
+  position: absolute !important;
+  top: 44px !important;
+  left: 16px !important;
+  transform: none !important;
+  z-index: 101 !important;
+  margin-top: 2px !important;
+  padding: 8px 12px !important;
 }
 
 /* Custom toggles (lsf-toggle) theme overrides */
@@ -400,17 +423,18 @@ html.unicorn .ls-root .lsf-toggle_checked .lsf-toggle__indicator:before {
 
 /* Vertical slider controls popover layout and alignment overrides */
 .ls-root .lsf-tool__controls-body {
-  height: 140px !important;
-  width: 36px !important;
+  height: auto !important;
+  min-height: 120px !important;
+  width: 32px !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
-  padding: 12px 0 !important;
+  padding: 10px 0 !important;
   box-sizing: border-box !important;
 }
 .ls-root .lsf-tool__controls-body .ant-slider-vertical {
-  height: 100% !important;
+  height: 100px !important;
   margin: 0 !important;
   padding: 0 !important;
 }
@@ -825,6 +849,10 @@ export default function LabelerEmbed() {
     // bounding box is selected (which triggers sidebar highlight + scrollIntoView).
     // ---------------------------------------------------------------------------
 
+    const origin = window.location.origin;
+    const post = (type: string, annotation?: unknown) =>
+      window.parent.postMessage({ source: "ls-embed", type, annotation }, origin);
+
     const originalFetch = window.fetch;
     const originalXhrOpen = XMLHttpRequest.prototype.open;
 
@@ -832,7 +860,24 @@ export default function LabelerEmbed() {
       const urlStr = typeof input === "string" ? input : (input as Request).url;
       if (urlStr.includes("/predict") || urlStr.includes("/predictions")) {
         const redirectUrl = "/api/ei/predict";
-        return originalFetch(redirectUrl, init);
+        try {
+          const res = await originalFetch(redirectUrl, init);
+          if (!res.ok) {
+            const cloned = res.clone();
+            cloned.json().then(data => {
+              const errMsg = data && data.error ? data.error : `Status ${res.status}`;
+              post("error", `Auto-Annotation failed: ${errMsg}`);
+            }).catch(() => {
+              cloned.text().then(text => {
+                post("error", `Auto-Annotation failed: ${text || res.statusText}`);
+              });
+            });
+          }
+          return res;
+        } catch (err: any) {
+          post("error", `Auto-Annotation network error: ${err?.message || String(err)}`);
+          throw err;
+        }
       }
       return originalFetch(input, init);
     };
@@ -841,6 +886,20 @@ export default function LabelerEmbed() {
       let targetUrl = url;
       if (typeof url === "string" && (url.includes("/predict") || url.includes("/predictions"))) {
         targetUrl = "/api/ei/predict";
+        const originalOnReadyStateChange = this.onreadystatechange;
+        this.onreadystatechange = function (e) {
+          if (this.readyState === 4) {
+            if (this.status >= 400 || this.status === 0) {
+              try {
+                const data = JSON.parse(this.responseText);
+                post("error", `Auto-Annotation failed: ${data.error || "Status " + this.status}`);
+              } catch {
+                post("error", `Auto-Annotation failed with status ${this.status || "connection refused"}. Is the ML backend running?`);
+              }
+            }
+          }
+          if (originalOnReadyStateChange) originalOnReadyStateChange.call(this, e);
+        };
       }
       return (originalXhrOpen as any).call(this, method, targetUrl, ...args);
     };
@@ -919,10 +978,6 @@ export default function LabelerEmbed() {
     window.scrollTo = function () {};
     window.scroll = function () {};
     window.scrollBy = function () {};
-
-    const origin = window.location.origin;
-    const post = (type: string, annotation?: unknown) =>
-      window.parent.postMessage({ source: "ls-embed", type, annotation }, origin);
 
     function onError(e: ErrorEvent) {
       post("error", e.message);
