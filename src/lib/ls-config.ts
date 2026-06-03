@@ -54,6 +54,20 @@ ${labelTags(labels, "Label")}
   </RectangleLabels>
 </View>`;
 
+    case "sam":
+      return `<View>
+  <Image name="image" value="$image" zoom="true" zoomControl="true"/>
+  <KeyPointLabels name="KeyPointLabels" toName="image" smart="true">
+${labelTags(labels, "Label")}
+  </KeyPointLabels>
+  <BrushLabels name="BrushLabels" toName="image" smart="true">
+${labelTags(labels, "Label")}
+  </BrushLabels>
+  <RectangleLabels name="RectangleLabels" toName="image" smart="true">
+${labelTags(labels, "Label")}
+  </RectangleLabels>
+</View>`;
+
     case "audio":
       return `<View>
   <Audio name="media" value="$audio" hotkey="space"/>

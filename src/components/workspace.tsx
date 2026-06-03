@@ -65,6 +65,7 @@ const TASK_LABELS: Record<LabelTask, string> = {
   detect: "Image · detect",
   audio: "Audio · classify",
   timeseries: "Time-series",
+  sam: "Image · Segment Anything (SAM)",
 };
 
 export function Workspace() {
@@ -249,7 +250,7 @@ export function Workspace() {
       if (!active) return;
       setSubmitting(true);
       try {
-        if (effectiveTask === "detect") {
+        if (effectiveTask === "detect" || effectiveTask === "sam") {
           // Object detection: push the (edited) boxes back to EI as pixels.
           const boxes = boxesFromAnnotation(annotation);
           await setBoundingBoxes(active.id, boxes);
@@ -497,6 +498,7 @@ export function Workspace() {
               <SelectItem value="auto">Auto-detect per sample</SelectItem>
               <SelectItem value="classify">Image · classify</SelectItem>
               <SelectItem value="detect">Image · detect (boxes)</SelectItem>
+              <SelectItem value="sam">Image · Segment Anything (SAM)</SelectItem>
               <SelectItem value="audio">Audio · classify</SelectItem>
               <SelectItem value="timeseries">Time-series</SelectItem>
             </SelectContent>

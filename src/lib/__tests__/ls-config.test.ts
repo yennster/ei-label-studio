@@ -44,6 +44,26 @@ describe("buildLabelConfig", () => {
     });
   });
 
+  describe("sam", () => {
+    const xml = buildLabelConfig({ task: "sam", labels: ["cat", "dog"] });
+
+    it("uses an Image object bound to the $image data field with name='image'", () => {
+      expect(xml).toContain('<Image name="image" value="$image"');
+    });
+
+    it("renders KeyPointLabels, BrushLabels, and RectangleLabels with smart='true'", () => {
+      expect(xml).toContain('<KeyPointLabels name="KeyPointLabels" toName="image" smart="true"');
+      expect(xml).toContain('<BrushLabels name="BrushLabels" toName="image" smart="true"');
+      expect(xml).toContain('<RectangleLabels name="RectangleLabels" toName="image" smart="true"');
+    });
+
+    it("includes the class labels under each smart tag", () => {
+      expect(xml).toContain('<KeyPointLabels name="KeyPointLabels" toName="image" smart="true">');
+      expect(xml).toContain('<Label value="cat" background="#6366f1"/>');
+      expect(xml).toContain('<Label value="dog" background="#06b6d4"/>');
+    });
+  });
+
   describe("audio", () => {
     const xml = buildLabelConfig({ task: "audio", labels: ["yes", "no"] });
 
@@ -100,7 +120,7 @@ describe("buildLabelConfig", () => {
     });
 
     it("wraps every config in a single View root", () => {
-      for (const task of ["classify", "detect", "audio", "timeseries"] as const) {
+      for (const task of ["classify", "detect", "audio", "timeseries", "sam"] as const) {
         const xml = buildLabelConfig({ task, labels: ["a"] });
         expect(xml.trim().startsWith("<View>")).toBe(true);
         expect(xml.trim().endsWith("</View>")).toBe(true);

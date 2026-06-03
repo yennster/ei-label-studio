@@ -714,6 +714,26 @@ export default function LabelerEmbed() {
     // bounding box is selected (which triggers sidebar highlight + scrollIntoView).
     // ---------------------------------------------------------------------------
 
+    const originalFetch = window.fetch;
+    const originalXhrOpen = XMLHttpRequest.prototype.open;
+
+    window.fetch = async function (input, init) {
+      const urlStr = typeof input === "string" ? input : (input as Request).url;
+      if (urlStr.includes("/predict") || urlStr.includes("/predictions")) {
+        const redirectUrl = "/api/ei/predict";
+        return originalFetch(redirectUrl, init);
+      }
+      return originalFetch(input, init);
+    };
+
+    XMLHttpRequest.prototype.open = function (method, url, ...args) {
+      let targetUrl = url;
+      if (typeof url === "string" && (url.includes("/predict") || url.includes("/predictions"))) {
+        targetUrl = "/api/ei/predict";
+      }
+      return originalXhrOpen.call(this, method, targetUrl, ...args) as any;
+    };
+
     const originalScrollIntoView = Element.prototype.scrollIntoView;
     const originalScrollIntoViewIfNeeded = (Element.prototype as any).scrollIntoViewIfNeeded;
     const originalFocus = HTMLElement.prototype.focus;
@@ -909,6 +929,8 @@ export default function LabelerEmbed() {
       window.scrollTo = originalWindowScrollTo;
       window.scroll = originalWindowScroll;
       window.scrollBy = originalWindowScrollBy;
+      window.fetch = originalFetch;
+      XMLHttpRequest.prototype.open = originalXhrOpen;
       instanceRef.current?.destroy?.();
       instanceRef.current = null;
     };

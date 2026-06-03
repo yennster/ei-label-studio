@@ -24,9 +24,10 @@ describe("mediaUrl", () => {
 });
 
 describe("sampleToTask", () => {
-  it("uses the image data field for classify and detect", () => {
+  it("uses the image data field for classify, detect and sam", () => {
     expect(sampleToTask(baseSample(), 2, "classify").data.image).toBe(mediaUrl(2, 1, "image"));
     expect(sampleToTask(baseSample(), 2, "detect").data.image).toBe(mediaUrl(2, 1, "image"));
+    expect(sampleToTask(baseSample(), 2, "sam").data.image).toBe(mediaUrl(2, 1, "image"));
   });
 
   it("uses the audio data field for audio tasks", () => {
@@ -100,6 +101,30 @@ describe("sampleToTask", () => {
     it("seeds an empty annotation when there are no boxes (so LS opens in edit mode)", () => {
       const noBoxes = baseSample({ imageDimensions: { width: 100, height: 100 } });
       expect(sampleToTask(noBoxes, 1, "detect").annotations).toEqual([{ result: [] }]);
+    });
+  });
+
+  describe("sam seeding", () => {
+    const samSample = baseSample({
+      boundingBoxes: [{ label: "face", x: 50, y: 100, width: 200, height: 150 }],
+      imageDimensions: { width: 1000, height: 500 },
+    });
+
+    it("converts absolute pixel boxes to percentages using RectangleLabels / image tags", () => {
+      const task = sampleToTask(samSample, 1, "sam");
+      const result = (task.annotations as Array<{ result: Array<Record<string, unknown>> }>)[0].result[0];
+      expect(result.type).toBe("rectanglelabels");
+      expect(result.from_name).toBe("RectangleLabels");
+      expect(result.to_name).toBe("image");
+      expect(result.original_width).toBe(1000);
+      expect(result.original_height).toBe(500);
+      expect(result.value).toMatchObject({
+        x: 5,
+        y: 20,
+        width: 20,
+        height: 30,
+        rectanglelabels: ["face"],
+      });
     });
   });
 });
