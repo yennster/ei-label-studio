@@ -1259,7 +1259,7 @@ export default function LabelerEmbed() {
           Auto accept
         </label>
       `;
-      parent.appendChild(wrapper);
+      parent.insertBefore(wrapper, parent.firstChild);
 
       const checkbox = wrapper.querySelector("#ei-auto-accept-checkbox") as HTMLInputElement;
       checkbox.addEventListener("change", (e) => {
