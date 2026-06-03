@@ -70,8 +70,24 @@ export async function GET(req: Request) {
 
           const results = await Promise.all(promises);
 
+          // The per-class fetches above return only *labeled* samples, which would
+          // hide everything still to label. Pull unlabeled samples too and interleave
+          // them in first, so the queue always surfaces what needs work.
+          const unlabeledQp = new URLSearchParams();
+          if (category) unlabeledQp.set("category", category);
+          unlabeledQp.set("limit", String(limitVal));
+          unlabeledQp.set("offset", String(offsetVal));
+          unlabeledQp.set("excludeSensors", "false");
+          const unlabeledRes = await studioFetch<{ samples: EISample[] }>(
+            session,
+            `/${session.projectId}/raw-data?${unlabeledQp}`,
+          );
+          const unlabeledSamples = (unlabeledRes.data?.samples ?? []).filter(
+            (s) => !s.label || s.label === "unlabeled",
+          );
+
           const interleaved: EISample[] = [];
-          const lists = results.map((r) => r.samples);
+          const lists = [unlabeledSamples, ...results.map((r) => r.samples)];
           const maxLen = Math.max(...lists.map((l) => l.length));
 
           for (let i = 0; i < maxLen; i++) {
@@ -83,7 +99,8 @@ export async function GET(req: Request) {
           }
 
           const finalSamples = interleaved.slice(0, limitVal);
-          const totalCount = results.reduce((acc, r) => acc + r.totalCount, 0);
+          const totalCount =
+            results.reduce((acc, r) => acc + r.totalCount, 0) + unlabeledSamples.length;
 
           return NextResponse.json({
             success: true,
