@@ -677,6 +677,41 @@ html.unicorn .ant-select-item-option-selected:hover {
   margin: 0 !important;
   flex-wrap: nowrap !important;
 }
+
+/* Auto-Annotation dark/unicorn theme overrides */
+html.dark .lsf-dynamic-preannotations,
+html.unicorn .lsf-dynamic-preannotations {
+  background-color: var(--card) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+html.dark .lsf-dynamic-preannotations-control,
+html.unicorn .lsf-dynamic-preannotations-control {
+  background-color: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Move the dropdown control popup out of the way to the top-right and fade it unless hovered */
+.lsf-dynamic-preannotations-control {
+  top: 8px !important;
+  right: 10px !important;
+  left: auto !important;
+  transform: none !important;
+  padding: 4px 10px !important;
+  opacity: 0.15 !important;
+  transition: opacity 0.2s ease !important;
+  z-index: 1010 !important;
+}
+
+.lsf-dynamic-preannotations-control:hover {
+  opacity: 1.0 !important;
+}
+
+/* Prevent label chips container from shrinking out of view */
+.lsf-labels {
+  flex-shrink: 0 !important;
+}
 `;
 
 function injectTheme() {
@@ -699,6 +734,7 @@ const INTERFACES = [
   "instruction",
   "side-column",
   "annotations:current",
+  "auto-annotation",
 ];
 
 export default function LabelerEmbed() {
@@ -706,6 +742,120 @@ export default function LabelerEmbed() {
   const instanceRef = useRef<LSInstance | null>(null);
 
   useEffect(() => {
+    console.log("[LSF Iframe] useEffect mounted, search parameters:", window.location.search);
+    const originalFetch = window.fetch;
+    const originalOpen = XMLHttpRequest.prototype.open;
+    const originalSend = XMLHttpRequest.prototype.send;
+
+    // Patch window.fetch to redirect GET /api/ml and POST /predict
+    window.fetch = async function (input: RequestInfo | URL, init?: RequestInit) {
+      const urlStr = typeof input === "string" ? input : (input instanceof URL ? input.toString() : input.url);
+      const method = (init?.method || "GET").toUpperCase();
+      console.log(`[LSF Fetch] Intercepted: ${method} ${urlStr}`);
+
+      if ((urlStr.includes("/api/ml") || urlStr.includes("/ml-backends")) && method === "GET") {
+        console.log(`[LSF Fetch] Redirecting ML backend discovery query to /api/ei/ml-mock`);
+        return originalFetch("/api/ei/ml-mock", init);
+      }
+
+      if (urlStr.includes("/api/projects/") && method === "GET") {
+        if (!urlStr.includes("/views") && !urlStr.includes("/custom-templates") && !urlStr.includes("/exports")) {
+          console.log(`[LSF Fetch] Redirecting project details query to /api/ei/projects-mock`);
+          return originalFetch("/api/ei/projects-mock", init);
+        }
+      }
+
+      if (urlStr.includes("/api/users") && method === "GET") {
+        console.log(`[LSF Fetch] Mocking /api/users response`);
+        return new Response(JSON.stringify({
+          id: 1,
+          email: "labeler@edgeimpulse.com",
+          first_name: "Labeler",
+          last_name: ""
+        }), { status: 200, headers: { "Content-Type": "application/json" } });
+      }
+
+      if ((urlStr.includes("/views") || urlStr.includes("/custom-templates") || urlStr.includes("/exports")) && method === "GET") {
+        console.log(`[LSF Fetch] Mocking empty list for views/templates/exports: ${urlStr}`);
+        return new Response(JSON.stringify([]), { status: 200, headers: { "Content-Type": "application/json" } });
+      }
+
+      if ((urlStr.includes("/predict") || urlStr.includes("/predictions")) && method === "POST") {
+        console.log(`[LSF Fetch] Redirecting prediction query to /api/ei/predict`);
+        try {
+          return await originalFetch("/api/ei/predict", {
+            ...init,
+            method: "POST",
+            headers: {
+              ...init?.headers,
+              "Content-Type": "application/json",
+            },
+          });
+        } catch (err) {
+          console.error("Intercepted fetch failed:", err);
+          return new Response(JSON.stringify({ error: String(err) }), { status: 500 });
+        }
+      }
+      return originalFetch(input, init);
+    };
+
+    // Patch XMLHttpRequest to redirect GET /api/ml and POST /predict
+    XMLHttpRequest.prototype.open = function (method: string, url: string | URL, ...args: any[]) {
+      let urlStr = String(url);
+      const upperMethod = method.toUpperCase();
+      console.log(`[LSF XHR] Intercepted: ${upperMethod} ${urlStr}`);
+
+      if ((urlStr.includes("/api/ml") || urlStr.includes("/ml-backends")) && upperMethod === "GET") {
+        console.log(`[LSF XHR] Redirecting ML backend discovery query to /api/ei/ml-mock`);
+        urlStr = "/api/ei/ml-mock";
+      } else if (urlStr.includes("/api/projects/") && upperMethod === "GET" && !urlStr.includes("/views") && !urlStr.includes("/custom-templates") && !urlStr.includes("/exports")) {
+        console.log(`[LSF XHR] Redirecting project details query to /api/ei/projects-mock`);
+        urlStr = "/api/ei/projects-mock";
+      } else if ((urlStr.includes("/predict") || urlStr.includes("/predictions")) && upperMethod === "POST") {
+        console.log(`[LSF XHR] Redirecting prediction query to /api/ei/predict`);
+        urlStr = "/api/ei/predict";
+      } else if ((urlStr.includes("/api/users") || urlStr.includes("/views") || urlStr.includes("/custom-templates") || urlStr.includes("/exports")) && upperMethod === "GET") {
+        console.log(`[LSF XHR] Flagging request for mock client-side response: ${urlStr}`);
+        (this as any)._isMock = true;
+        (this as any)._mockUrl = urlStr;
+      }
+      return originalOpen.apply(this, [method, urlStr, ...args] as any);
+    };
+
+    XMLHttpRequest.prototype.send = function (body?: any) {
+      if ((this as any)._isMock) {
+        const xhr = this;
+        const mockUrl = (xhr as any)._mockUrl;
+        let responseText = "[]";
+        if (mockUrl.includes("/api/users")) {
+          responseText = JSON.stringify({
+            id: 1,
+            email: "labeler@edgeimpulse.com",
+            first_name: "Labeler",
+            last_name: ""
+          });
+        }
+        console.log(`[LSF XHR] Supplying mock response for ${mockUrl}: ${responseText}`);
+        
+        Object.defineProperty(xhr, 'status', { writable: true, value: 200 });
+        Object.defineProperty(xhr, 'statusText', { writable: true, value: 'OK' });
+        Object.defineProperty(xhr, 'readyState', { writable: true, value: 4 });
+        Object.defineProperty(xhr, 'responseText', { writable: true, value: responseText });
+        Object.defineProperty(xhr, 'response', { writable: true, value: responseText });
+
+        setTimeout(() => {
+          if (typeof xhr.onreadystatechange === 'function') {
+            xhr.onreadystatechange({} as any);
+          }
+          if (typeof xhr.onload === 'function') {
+            xhr.onload({} as any);
+          }
+        }, 0);
+        return;
+      }
+      return originalSend.call(this, body);
+    };
+
     // ---------------------------------------------------------------------------
     // AGGRESSIVE scroll-prevention: Label Studio's bundle uses many different
     // DOM APIs to scroll (scrollIntoView, Element.scroll/scrollTo, direct
@@ -837,20 +987,119 @@ export default function LabelerEmbed() {
     });
 
     function render(config: string, task: LSTask) {
+      console.log("[LSF Iframe] render() called for task:", task.id);
       loadLabelStudio()
         .then((LabelStudioCtor) => {
-          if (!rootRef.current) return;
+          if (!rootRef.current) {
+            console.log("[LSF Iframe] rootRef is empty, aborting render");
+            return;
+          }
+          console.log("[LSF Iframe] Initializing new LabelStudio instance");
           instanceRef.current?.destroy?.();
           rootRef.current.innerHTML = "";
-          instanceRef.current = new LabelStudioCtor(rootRef.current, {
+          const instance = new LabelStudioCtor(rootRef.current, {
+            host: window.location.origin,
             config,
             task,
             interfaces: INTERFACES,
             user: { pk: 1, firstName: "Labeler" },
+            project: { id: 1 },
             onSubmitAnnotation: (_ls: unknown, a: unknown) => post("submit", serializeAnnotation(a)),
             onUpdateAnnotation: (_ls: unknown, a: unknown) => post("submit", serializeAnnotation(a)),
             onSkipTask: () => post("skip"),
           });
+          instanceRef.current = instance;
+          (window as any).editorInstance = instance;
+          console.log("[LSF Iframe] LabelStudio instance initialized and exposed as window.editorInstance");
+
+          if (typeof (instance as any).on === "function") {
+            (instance as any).on("regionFinishedDrawing", async (region: any) => {
+              const name = region.from_name?.name;
+              const type = region.type;
+              console.log("[LSF Iframe] regionFinishedDrawing event fired. region.type:", type, "region.from_name.name:", name);
+              
+              const isAutoAnnotationEnabled = (window as any).Htx?.autoAnnotation ?? true;
+              console.log("[LSF Iframe] isAutoAnnotationEnabled:", isAutoAnnotationEnabled);
+              if (!isAutoAnnotationEnabled) return;
+
+              if (name === "kp-prompt" || name === "rect-prompt") {
+                console.log("[LSF Iframe] Prompt region detected. Querying MobileSAM predict API...");
+                try {
+                  const activeAnnotation = region.annotation || (instance as any).annotationStore?.active;
+                  if (!activeAnnotation) {
+                    console.warn("[LSF Iframe] No active annotation found to serialize.");
+                    return;
+                  }
+                  const serialized = activeAnnotation.serializeAnnotation();
+                  const payload = {
+                    task,
+                    annotations: [{ result: serialized }]
+                  };
+                  console.log("[LSF Iframe] Predict payload:", JSON.stringify(payload));
+                  
+                  const response = await fetch("/api/ei/predict", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                  });
+                  
+                  if (!response.ok) {
+                    throw new Error(`Predict API returned status ${response.status}`);
+                  }
+                  
+                  const data = await response.json();
+                  console.log("[LSF Iframe] Predict API response:", JSON.stringify(data));
+                  
+                  if (data.result && data.result.length > 0) {
+                    console.log("[LSF Iframe] Deserializing polygon results into annotation...");
+                    if (typeof activeAnnotation.deserializeResults === "function") {
+                      activeAnnotation.deserializeResults(data.result);
+                    } else {
+                      console.warn("[LSF Iframe] activeAnnotation.deserializeResults is not a function");
+                    }
+                    console.log("[LSF Iframe] Deleting original prompt region...");
+                    if (typeof region.deleteRegion === "function") {
+                      region.deleteRegion();
+                    } else if (typeof activeAnnotation.deleteRegion === "function") {
+                      activeAnnotation.deleteRegion(region);
+                    } else {
+                      console.warn("[LSF Iframe] Could not delete prompt region");
+                    }
+                    console.log("[LSF Iframe] Success!");
+                  } else {
+                    console.warn("[LSF Iframe] Predict API returned no results.");
+                  }
+                } catch (err) {
+                  console.error("[LSF Iframe] Auto-annotation prediction failed:", err);
+                }
+              }
+            });
+            console.log("[LSF Iframe] Registered regionFinishedDrawing listener on LabelStudio instance");
+          } else {
+            console.warn("[LSF Iframe] LabelStudio instance does not support .on event registration");
+          }
+
+          console.log("[LSF Iframe] Instance keys:", Object.keys(instance || {}));
+          console.log("[LSF Iframe] window.Htx exists:", !!(window as any).Htx);
+          if ((window as any).Htx) {
+            const htx = (window as any).Htx;
+            console.log("[LSF Iframe] window.Htx keys:", JSON.stringify(Object.keys(htx)));
+            if (htx.project) {
+              console.log("[LSF Iframe] window.Htx.project keys:", Object.keys(htx.project));
+            }
+            console.log("[LSF Iframe] autoAnnotation:", htx.autoAnnotation);
+            console.log("[LSF Iframe] autoAcceptSuggestions:", htx.autoAcceptSuggestions);
+            console.log("[LSF Iframe] awaitingSuggestions:", htx.awaitingSuggestions);
+            console.log("[LSF Iframe] suggestionsRequest type:", typeof htx.suggestionsRequest);
+            
+            const mlProps = Object.keys(htx).filter(k => k.toLowerCase().includes("ml") || k.toLowerCase().includes("backend") || k.toLowerCase().includes("model"));
+            console.log("[LSF Iframe] htx ML props:", mlProps);
+            if (htx.project) {
+              const projectMlProps = Object.keys(htx.project).filter(k => k.toLowerCase().includes("ml") || k.toLowerCase().includes("backend") || k.toLowerCase().includes("model"));
+              console.log("[LSF Iframe] htx.project ML props:", projectMlProps);
+            }
+          }
+
           injectTheme();
         })
         .catch((e) => {
@@ -866,6 +1115,7 @@ export default function LabelerEmbed() {
       if (e.origin !== origin) return;
       const d = e.data;
       if (d?.source === "ls-host") {
+        console.log("[LSF Iframe] Received postMessage from parent:", d.type, d);
         if (d.type === "render") {
           if (d.theme) setTheme(d.theme);
           render(d.config, d.task);
@@ -889,6 +1139,9 @@ export default function LabelerEmbed() {
     post("ready");
 
     return () => {
+      window.fetch = originalFetch;
+      XMLHttpRequest.prototype.open = originalOpen;
+      XMLHttpRequest.prototype.send = originalSend;
       window.removeEventListener("message", onMessage);
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("error", onError);
@@ -911,6 +1164,9 @@ export default function LabelerEmbed() {
       window.scrollBy = originalWindowScrollBy;
       instanceRef.current?.destroy?.();
       instanceRef.current = null;
+      if ((window as any).editorInstance) {
+        delete (window as any).editorInstance;
+      }
     };
   }, []);
 

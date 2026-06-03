@@ -78,6 +78,7 @@ describe("sampleToTask", () => {
       const task = sampleToTask(detectSample, 1, "detect");
       const result = (task.annotations as Array<{ result: Array<Record<string, unknown>> }>)[0].result[0];
       expect(result.type).toBe("rectanglelabels");
+      expect(result.from_name).toBe("label");
       expect(result.original_width).toBe(1000);
       expect(result.original_height).toBe(500);
       expect(result.value).toMatchObject({
@@ -86,6 +87,16 @@ describe("sampleToTask", () => {
         width: 20, // 200 / 1000 * 100
         height: 30, // 150 / 500 * 100
         rotation: 0,
+        rectanglelabels: ["face"],
+      });
+    });
+
+    it("converts absolute pixel boxes to rect-prompt rectanglelabels for segment task", () => {
+      const task = sampleToTask(detectSample, 1, "segment");
+      const result = (task.annotations as Array<{ result: Array<Record<string, unknown>> }>)[0].result[0];
+      expect(result.type).toBe("rectanglelabels");
+      expect(result.from_name).toBe("rect-prompt");
+      expect(result.value).toMatchObject({
         rectanglelabels: ["face"],
       });
     });
@@ -113,6 +124,30 @@ describe("boxesFromAnnotation", () => {
           original_width: 1000,
           original_height: 500,
           value: { x: 5, y: 20, width: 20, height: 30, rectanglelabels: ["face"] },
+        },
+      ],
+    };
+    expect(boxesFromAnnotation(annotation)).toEqual([
+      { label: "face", x: 50, y: 100, width: 200, height: 150 },
+    ]);
+  });
+
+  it("converts percentage polygons back to absolute bounding boxes with rounding", () => {
+    const annotation = {
+      result: [
+        {
+          type: "polygonlabels",
+          original_width: 1000,
+          original_height: 500,
+          value: {
+            points: [
+              [5, 20],
+              [25, 20],
+              [25, 50],
+              [5, 50],
+            ],
+            polygonlabels: ["face"],
+          },
         },
       ],
     };

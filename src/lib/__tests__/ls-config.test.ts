@@ -82,6 +82,18 @@ describe("buildLabelConfig", () => {
     });
   });
 
+  describe("segment", () => {
+    const xml = buildLabelConfig({ task: "segment", labels: ["car", "bus"] });
+
+    it("uses KeyPointLabels, RectangleLabels, and PolygonLabels", () => {
+      expect(xml).toContain('<KeyPointLabels name="kp-prompt" toName="media">');
+      expect(xml).toContain('<RectangleLabels name="rect-prompt" toName="media">');
+      expect(xml).toContain('<PolygonLabels name="label" toName="media">');
+      expect(xml).toContain('<Label value="car"');
+      expect(xml).toContain('<Label value="bus"');
+    });
+  });
+
   describe("label fallbacks and escaping", () => {
     it("falls back to a single `unlabeled` label when none are given", () => {
       const xml = buildLabelConfig({ task: "classify", labels: [] });
@@ -100,7 +112,7 @@ describe("buildLabelConfig", () => {
     });
 
     it("wraps every config in a single View root", () => {
-      for (const task of ["classify", "detect", "audio", "timeseries"] as const) {
+      for (const task of ["classify", "detect", "audio", "timeseries", "segment"] as const) {
         const xml = buildLabelConfig({ task, labels: ["a"] });
         expect(xml.trim().startsWith("<View>")).toBe(true);
         expect(xml.trim().endsWith("</View>")).toBe(true);

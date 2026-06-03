@@ -7,3 +7,4 @@ allowBuilds:
   sharp: true
   unrs-resolver: true
   '@heartexlabs/label-studio': true
+  onnxruntime-node: true

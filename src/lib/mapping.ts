@@ -18,7 +18,7 @@ export function sampleToTask(
   let predictions: LSPrediction[] | undefined;
   let annotations: unknown[] = [];
 
-  if (task === "classify" || task === "detect") {
+  if (task === "classify" || task === "detect" || task === "segment") {
     data.image = mediaUrl(projectId, sample.id, "image");
   } else if (task === "audio") {
     data.audio = mediaUrl(projectId, sample.id, "audio");
@@ -37,14 +37,15 @@ export function sampleToTask(
       ];
       annotations = [{ result }];
     }
-  } else if (task === "detect") {
+  } else if (task === "detect" || task === "segment") {
     // EI stores boxes as ABSOLUTE pixels; Label Studio expects PERCENTAGES of
     // the image, with original_width/height as the reference. Seed them as an
     // editable annotation so they render and can be adjusted.
     const dims = sample.imageDimensions;
+    const fromName = task === "segment" ? "rect-prompt" : "label";
     if (sample.boundingBoxes?.length && dims?.width && dims?.height) {
       const result: LSResult[] = sample.boundingBoxes.map((b) => ({
-        from_name: "label",
+        from_name: fromName,
         to_name: "media",
         type: "rectanglelabels",
         original_width: dims.width,
@@ -89,7 +90,9 @@ export function boxesFromAnnotation(annotation: unknown): EIBoundingBox[] {
         y?: number;
         width?: number;
         height?: number;
+        points?: number[][];
         rectanglelabels?: string[];
+        polygonlabels?: string[];
         labels?: string[];
       };
     }>;
@@ -97,19 +100,44 @@ export function boxesFromAnnotation(annotation: unknown): EIBoundingBox[] {
   if (!a?.result) return [];
   const boxes: EIBoundingBox[] = [];
   for (const r of a.result) {
-    if (r.type !== "rectanglelabels" || !r.value) continue;
+    if (!r.value) continue;
     const ow = r.original_width ?? 0;
     const oh = r.original_height ?? 0;
     if (!ow || !oh) continue;
-    const label = r.value.rectanglelabels?.[0] ?? r.value.labels?.[0];
-    if (!label) continue;
-    boxes.push({
-      label,
-      x: Math.round(((r.value.x ?? 0) / 100) * ow),
-      y: Math.round(((r.value.y ?? 0) / 100) * oh),
-      width: Math.round(((r.value.width ?? 0) / 100) * ow),
-      height: Math.round(((r.value.height ?? 0) / 100) * oh),
-    });
+
+    if (r.type === "rectanglelabels") {
+      const label = r.value.rectanglelabels?.[0] ?? r.value.labels?.[0];
+      if (!label) continue;
+      boxes.push({
+        label,
+        x: Math.round(((r.value.x ?? 0) / 100) * ow),
+        y: Math.round(((r.value.y ?? 0) / 100) * oh),
+        width: Math.round(((r.value.width ?? 0) / 100) * ow),
+        height: Math.round(((r.value.height ?? 0) / 100) * oh),
+      });
+    } else if (r.type === "polygonlabels" && r.value.points?.length) {
+      const label = r.value.polygonlabels?.[0] ?? r.value.labels?.[0];
+      if (!label) continue;
+
+      const points = r.value.points;
+      const xs = points.map((p) => p[0]);
+      const ys = points.map((p) => p[1]);
+      const minX = Math.min(...xs);
+      const maxX = Math.max(...xs);
+      const minY = Math.min(...ys);
+      const maxY = Math.max(...ys);
+
+      const wPct = maxX - minX;
+      const hPct = maxY - minY;
+
+      boxes.push({
+        label,
+        x: Math.round((minX / 100) * ow),
+        y: Math.round((minY / 100) * oh),
+        width: Math.round((wPct / 100) * ow),
+        height: Math.round((hPct / 100) * oh),
+      });
+    }
   }
   return boxes;
 }

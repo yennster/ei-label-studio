@@ -53,6 +53,21 @@ ${labelTags(labels, "Choice")}
 ${labelTags(labels, "Label")}
   </RectangleLabels>
 </View>`;
+    
+    case "segment":
+      return `<View>
+  <Image name="media" value="$image" zoom="true" zoomControl="true"/>
+  <KeyPointLabels name="kp-prompt" toName="media">
+    <Label value="Foreground" background="#00FF00"/>
+    <Label value="Background" background="#FF0000"/>
+  </KeyPointLabels>
+  <RectangleLabels name="rect-prompt" toName="media">
+${labelTags(labels, "Label")}
+  </RectangleLabels>
+  <PolygonLabels name="label" toName="media">
+${labelTags(labels, "Label")}
+  </PolygonLabels>
+</View>`;
 
     case "audio":
       return `<View>

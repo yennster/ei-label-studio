@@ -42,3 +42,8 @@ next-env.d.ts
 
 # local agent tooling
 .claude/
+
+# models
+/public/models/
+*.onnx
+

@@ -33,28 +33,37 @@ export default function LabelStudio({ config, task, onSubmit, onSkip, onNav }: L
   const themeRef = useRef(resolvedTheme);
   themeRef.current = resolvedTheme;
 
+  // Track if the iframe has completed its initial load event to prevent race conditions
+  const [iframeLoaded, setIframeLoaded] = useState(false);
+
   // Use a unique session token as a cache-buster so the iframe page reloads
   // fresh on mount but stays constant while hot-reloading samples. Lazy state
   // initializer → computed once per mount, not on every render.
   const [cacheBuster] = useState(() => Math.random().toString(36).substring(7));
 
   useEffect(() => {
-    if (ready.current) {
+    if (ready.current || iframeLoaded) {
       const origin = window.location.origin;
+      console.log("[LSF Parent] Resolving theme update inside iframe:", resolvedTheme);
       iframeRef.current?.contentWindow?.postMessage(
         { source: "ls-host", type: "theme", theme: resolvedTheme },
         origin,
       );
     }
-  }, [resolvedTheme]);
+  }, [resolvedTheme, iframeLoaded]);
 
   useEffect(() => {
     const origin = window.location.origin;
+    console.log("[LSF Parent] useEffect hook ran. task ID:", task?.id, "iframeLoaded:", iframeLoaded, "ready:", ready.current);
 
     const send = () => {
       // Nothing to render until the first sample/task is ready; the iframe is
       // already mounted and loading the bundle in the meantime.
-      if (!task) return;
+      if (!task) {
+        console.log("[LSF Parent] Send aborted: task is null");
+        return;
+      }
+      console.log("[LSF Parent] Sending render postMessage to iframe for task:", task.id);
       iframeRef.current?.contentWindow?.postMessage(
         { source: "ls-host", type: "render", config, task, theme: themeRef.current },
         origin,
@@ -65,6 +74,7 @@ export default function LabelStudio({ config, task, onSubmit, onSkip, onNav }: L
       if (e.origin !== origin) return;
       const d = e.data;
       if (d?.source !== "ls-embed") return;
+      console.log("[LSF Parent] Received postMessage:", d.type, d);
       if (d.type === "ready") {
         ready.current = true;
         send();
@@ -74,6 +84,8 @@ export default function LabelStudio({ config, task, onSubmit, onSkip, onNav }: L
         handlers.current.onSkip?.();
       } else if (d.type === "nav") {
         handlers.current.onNav?.(d.dir);
+      } else if (d.type === "log") {
+        console.log(...d.args);
       } else if (d.type === "error") {
         toast.error(`Canvas error: ${d.annotation}`);
       }
@@ -81,18 +93,25 @@ export default function LabelStudio({ config, task, onSubmit, onSkip, onNav }: L
 
     window.addEventListener("message", onMessage);
     // If the iframe is already up (config/task changed), push the new sample.
-    if (ready.current) send();
+    if (ready.current || iframeLoaded) {
+      console.log("[LSF Parent] Iframe is ready/loaded during effect, sending render");
+      send();
+    }
 
     return () => window.removeEventListener("message", onMessage);
-  }, [config, task]);
+  }, [config, task, iframeLoaded]);
 
   return (
     <div className="h-full w-full bg-background">
       <iframe
         ref={iframeRef}
-        src={`/embed/labeler?theme=${resolvedTheme || "dark"}&v=${cacheBuster}`}
+        src={`/embed/labeler?theme=${resolvedTheme || "dark"}&v=${cacheBuster}_v7`}
         title="Label Studio"
         className="h-full w-full min-w-0 border-0 bg-background"
+        onLoad={() => {
+          console.log("[LSF Parent] iframe onLoad event handler triggered");
+          setIframeLoaded(true);
+        }}
       />
     </div>
   );
