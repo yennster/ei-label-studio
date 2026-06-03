@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession, studioFetch } from "@/lib/ei-server";
-import type { EISample } from "@/lib/types";
+import type { EIProjectMetadata, EISample } from "@/lib/types";
 
 export const runtime = "nodejs";
 
@@ -30,7 +30,7 @@ export async function GET(req: Request) {
   // we fetch a balanced, interleaved mixture of samples from each class.
   if (!labels) {
     try {
-      const metaResult = await studioFetch<any>(
+      const metaResult = await studioFetch<{ metadata?: EIProjectMetadata }>(
         session,
         `/${session.projectId}/raw-data/project-metadata`,
       );
@@ -42,8 +42,8 @@ export async function GET(req: Request) {
         else if (category === "anomaly" && metadata.anomaly) categoryData = metadata.anomaly;
 
         const activeLabels: string[] = categoryData?.labels
-          ?.filter((l: any) => l.dataCount > 0)
-          ?.map((l: any) => l.label) ?? [];
+          ?.filter((l) => l.dataCount > 0)
+          ?.map((l) => l.label) ?? [];
 
         if (activeLabels.length > 1) {
           const limitVal = Number(url.searchParams.get("limit") || "200");
