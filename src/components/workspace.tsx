@@ -557,7 +557,10 @@ export function Workspace() {
         {active && (
           <div className="space-y-2 rounded-lg border border-border bg-card/50 p-3 text-sm">
             <Row label="Current label">
-              <Badge variant={active.label && active.label !== "unlabeled" ? "default" : "secondary"}>
+              <Badge
+                variant={active.label && active.label !== "unlabeled" ? "default" : "secondary"}
+                className="h-auto whitespace-normal break-words text-left"
+              >
                 {active.label || "unlabeled"}
               </Badge>
             </Row>
@@ -640,9 +643,9 @@ export function Workspace() {
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-2">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="text-right font-medium">{children}</span>
+    <div className="flex items-start justify-between gap-2">
+      <span className="shrink-0 text-muted-foreground">{label}</span>
+      <span className="min-w-0 break-words text-right font-medium">{children}</span>
     </div>
   );
 }
