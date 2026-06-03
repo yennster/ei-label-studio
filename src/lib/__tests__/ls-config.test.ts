@@ -126,6 +126,15 @@ describe("buildLabelConfig", () => {
         expect(xml.trim().endsWith("</View>")).toBe(true);
       }
     });
+
+    it("never emits a bare ampersand in any template (well-formed XML)", () => {
+      // A raw `&` (e.g. in a Header) makes the whole config fail to parse with
+      // `xmlParseEntityRef: no name`, blanking the canvas. Every & must be an entity.
+      for (const task of ["classify", "detect", "audio", "timeseries", "sam"] as const) {
+        const xml = buildLabelConfig({ task, labels: ["a", "b"], channels: ["x"] });
+        expect(xml).not.toMatch(/&(?!amp;|lt;|gt;|quot;|apos;|#)/);
+      }
+    });
   });
 });
 
