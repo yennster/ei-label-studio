@@ -365,8 +365,6 @@ html.unicorn .ls-root .lsf-tool__key * {
 /* Auto-annotation controls topbar theme overrides */
 .lsf-dynamic-preannotations {
   padding: 0 16px !important;
-  /* Positioning context for the settings popover so it anchors to the toggle. */
-  position: relative !important;
 }
 html.dark .lsf-dynamic-preannotations,
 html.unicorn .lsf-dynamic-preannotations {
@@ -405,16 +403,17 @@ html.dark .lsf-dynamic-preannotations-control *,
 html.unicorn .lsf-dynamic-preannotations-control * {
   color: var(--foreground) !important;
 }
-/* Park the "Auto accept suggestions" popover inline in the topbar, just to the
-   right of the Auto-Annotation toggle (vertically centered on it) so it never
-   covers the image canvas. Anchored to .lsf-dynamic-preannotations (above). */
+/* Pin the "Auto accept suggestions" popover to the top-right of the viewport, in
+   the topbar band (right of the toggle) — always visible and never over the image.
+   position: fixed makes it viewport-relative, dodging the centered toggle context
+   that pushed earlier attempts over the canvas or off-screen. */
 .lsf-dynamic-preannotations-control {
-  position: absolute !important;
-  top: 50% !important;
-  left: calc(100% + 12px) !important;
-  right: auto !important;
+  position: fixed !important;
+  top: 6px !important;
+  right: 16px !important;
+  left: auto !important;
   bottom: auto !important;
-  transform: translateY(-50%) !important;
+  transform: none !important;
   z-index: 101 !important;
   margin: 0 !important;
   padding: 6px 12px !important;
