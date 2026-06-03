@@ -93,6 +93,7 @@ export function Workspace() {
     labelFilter,
     setLabelFilter,
     limit,
+    setAutoAdvance,
   } = useApp();
 
   const [loading, setLoading] = useState(true);
@@ -602,7 +603,26 @@ export function Workspace() {
         <div className="space-y-2 text-xs text-muted-foreground">
           <div className="flex items-center justify-between">
             <span>Auto-advance</span>
-            <Badge variant={autoAdvance ? "default" : "secondary"}>{autoAdvance ? "on" : "off"}</Badge>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground/60 select-none">
+                {autoAdvance ? "on" : "off"}
+              </span>
+              <button
+                type="button"
+                onClick={() => setAutoAdvance(!autoAdvance)}
+                className={cn(
+                  "relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                  autoAdvance ? "bg-primary" : "bg-muted border border-border"
+                )}
+              >
+                <span
+                  className={cn(
+                    "pointer-events-none block h-4 w-4 rounded-full bg-background shadow-lg ring-0 transition-transform",
+                    autoAdvance ? "translate-x-4" : "translate-x-0.5"
+                  )}
+                />
+              </button>
+            </div>
           </div>
           <p>
             Submit in the canvas to push the label to Edge Impulse. Use{" "}

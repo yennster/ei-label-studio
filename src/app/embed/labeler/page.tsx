@@ -901,6 +901,51 @@ html.unicorn .ls-root h4, html.unicorn .ls-root h5, html.unicorn .ls-root h6,
 html.unicorn .ls-root .ant-typography {
   color: var(--foreground) !important;
 }
+
+/* Custom centered prediction/SAM loader styles */
+#ei-sam-loader {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  background-color: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(4px) !important;
+  border: 1px solid var(--border) !important;
+  padding: 12px 20px !important;
+  border-radius: 9999px !important;
+  display: none;
+  align-items: center !important;
+  gap: 10px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+  z-index: 9999 !important;
+  pointer-events: none !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: #111111 !important;
+  font-family: sans-serif !important;
+}
+html.dark #ei-sam-loader,
+html.unicorn #ei-sam-loader {
+  background-color: rgba(30, 30, 40, 0.85) !important;
+  color: #eeeeee !important;
+}
+.ei-sam-spinner {
+  width: 16px !important;
+  height: 16px !important;
+  border: 2px solid var(--primary) !important;
+  border-top-color: transparent !important;
+  border-radius: 50% !important;
+  animation: ei-spin 0.6s linear infinite !important;
+}
+@keyframes ei-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+body.ei-sam-loading,
+body.ei-sam-loading * {
+  cursor: wait !important;
+}
 `;
 
 function injectTheme() {
@@ -1181,6 +1226,21 @@ export default function LabelerEmbed() {
                   label_config: config,
                   params: { context: { result } },
                 };
+                // Show loader spinner and set wait cursor
+                let loader = document.getElementById("ei-sam-loader");
+                if (!loader) {
+                  loader = document.createElement("div");
+                  loader.id = "ei-sam-loader";
+                  loader.innerHTML = `
+                    <div class="ei-sam-spinner"></div>
+                    <span>Segmenting...</span>
+                  `;
+                  const mainView = document.querySelector(".lsf-main-view") || document.body;
+                  mainView.appendChild(loader);
+                }
+                loader.style.display = "flex";
+                document.body.classList.add("ei-sam-loading");
+
                 const promise = originalFetch("/api/ei/predict", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
@@ -1197,6 +1257,10 @@ export default function LabelerEmbed() {
                   console.error("[SAM] predict fetch error", err);
                   post("error", "Auto-Annotation failed: network error");
                   return { results: [] };
+                }).finally(() => {
+                  const el = document.getElementById("ei-sam-loader");
+                  if (el) el.style.display = "none";
+                  document.body.classList.remove("ei-sam-loading");
                 });
                 // Backend bbox/brush results omit original_width/height; add them back
                 // so the suggestions render and map correctly.
