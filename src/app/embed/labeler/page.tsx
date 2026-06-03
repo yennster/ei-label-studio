@@ -1236,7 +1236,7 @@ export default function LabelerEmbed() {
       s.setProperty("bottom", "auto", "important");
       s.setProperty("transform", "translateY(-50%)", "important");
       s.setProperty("margin", "0", "important");
-      s.setProperty("z-index", "200", "important");
+      s.setProperty("z-index", "9999", "important");
     };
     const popoverObserver = new MutationObserver(positionAutoAccept);
     popoverObserver.observe(document.body, { childList: true, subtree: true });

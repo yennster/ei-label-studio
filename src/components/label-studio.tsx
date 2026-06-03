@@ -106,7 +106,7 @@ export default function LabelStudio({ config, task, onSubmit, onSkip, onNav, aut
     <div className="h-full w-full bg-background">
       <iframe
         ref={iframeRef}
-        src={`/embed/labeler?theme=${resolvedTheme || "dark"}&v=${cacheBuster}`}
+        src={`/embed/labeler?theme=${resolvedTheme || "light"}&v=${cacheBuster}`}
         title="Label Studio"
         className="h-full w-full min-w-0 border-0 bg-background"
       />
