@@ -404,13 +404,11 @@ html.unicorn .lsf-dynamic-preannotations-control * {
   padding: 8px 12px !important;
 }
 
-/* Highlight the Smart Tool (magic wand) button to guide user action */
-.ls-root .lsf-tool_smart:not(.lsf-tool_active) .lsf-tool__icon {
-  border: 1px solid var(--primary) !important;
-  background-color: color-mix(in oklch, var(--primary) 15%, transparent) !important;
-}
-.ls-root .lsf-tool_smart .lsf-tool__icon:hover {
-  background-color: color-mix(in oklch, var(--primary) 25%, transparent) !important;
+/* <Header> tag text — LS renders it as a heading whose default color is dark,
+   leaving the SAM mode hints near-invisible on a dark canvas. Make them readable. */
+html.dark .ls-root :is(h1, h2, h3, h4, h5, h6),
+html.unicorn .ls-root :is(h1, h2, h3, h4, h5, h6) {
+  color: var(--foreground) !important;
 }
 
 /* Custom toggles (lsf-toggle) theme overrides */
