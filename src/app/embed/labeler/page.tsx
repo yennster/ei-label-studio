@@ -699,6 +699,8 @@ const INTERFACES = [
   "instruction",
   "side-column",
   "annotations:current",
+  "auto-annotation",
+  "predictions:menu",
 ];
 
 export default function LabelerEmbed() {
