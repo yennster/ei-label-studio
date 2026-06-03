@@ -1052,7 +1052,12 @@ export default function LabelerEmbed() {
           // Point2Label / Bbox2Label.
           const ls = instanceRef.current as any;
           if (ls?.on) {
+            console.log(
+              "[SAM] interactive ML wired — listening for regionFinishedDrawing.",
+              "store?", !!ls.store, "loadSuggestions?", !!ls.store?.loadSuggestions,
+            );
             ls.on("regionFinishedDrawing", (...args: any[]) => {
+              console.log("[SAM] regionFinishedDrawing fired with", args.length, "arg(s)");
               try {
                 const region =
                   args.find((a) => a && (a.results || a.type || a.serialize)) ?? args[1] ?? args[0];
