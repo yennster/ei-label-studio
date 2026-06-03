@@ -1248,7 +1248,7 @@ export default function LabelerEmbed() {
     // Inline custom checkbox injection next to the Auto-Annotation toggle
     const injectCustomCheckbox = () => {
       const toggle = document.querySelector(".lsf-dynamic-preannotations .lsf-toggle");
-      const parent = toggle?.parentElement;
+      const parent = toggle?.closest(".lsf-field-label_placement_right");
       if (!parent || document.getElementById("ei-auto-accept-wrapper")) return;
 
       const wrapper = document.createElement("div");

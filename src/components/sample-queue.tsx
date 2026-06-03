@@ -69,9 +69,10 @@ export function SampleQueue({
                 ) : (
                   <Badge
                     variant="secondary"
-                    className="max-w-24 shrink-0 truncate px-1.5 py-0 text-[10px]"
+                    className="max-w-24 shrink-0 px-1.5 py-0 text-[10px] justify-start"
+                    title={s.label}
                   >
-                    {s.label}
+                    <span className="block truncate">{s.label}</span>
                   </Badge>
                 )}
               </button>
