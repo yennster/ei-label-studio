@@ -353,6 +353,115 @@ html.unicorn .ls-root .lsf-tool__key * {
   font-size: 11px !important;
 }
 
+/* Auto-annotation controls topbar theme overrides */
+.ls-root .lsf-dynamic-preannotations {
+  padding: 0 16px !important;
+}
+html.dark .ls-root .lsf-dynamic-preannotations,
+html.unicorn .ls-root .lsf-dynamic-preannotations {
+  background-color: var(--card) !important;
+  color: var(--foreground) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+html.dark .ls-root .lsf-dynamic-preannotations *,
+html.unicorn .ls-root .lsf-dynamic-preannotations * {
+  color: var(--foreground) !important;
+}
+
+/* Auto-annotation settings dropdown theme overrides */
+html.dark .ls-root .lsf-dynamic-preannotations-control,
+html.unicorn .ls-root .lsf-dynamic-preannotations-control {
+  background-color: var(--card) !important;
+  color: var(--foreground) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+html.dark .ls-root .lsf-dynamic-preannotations-control *,
+html.unicorn .ls-root .lsf-dynamic-preannotations-control * {
+  color: var(--foreground) !important;
+}
+
+/* Custom toggles (lsf-toggle) theme overrides */
+html.dark .ls-root .lsf-toggle,
+html.unicorn .ls-root .lsf-toggle {
+  background: var(--muted) !important;
+  color: var(--primary) !important;
+  box-shadow: inset 0 0 0 1px var(--border) !important;
+}
+html.dark .ls-root .lsf-toggle__indicator:before,
+html.unicorn .ls-root .lsf-toggle__indicator:before {
+  background: var(--foreground) !important;
+  box-shadow: none !important;
+}
+html.dark .ls-root .lsf-toggle_checked .lsf-toggle__indicator:before,
+html.unicorn .ls-root .lsf-toggle_checked .lsf-toggle__indicator:before {
+  background: var(--primary-foreground) !important;
+}
+
+/* Vertical slider controls popover layout and alignment overrides */
+.ls-root .lsf-tool__controls-body {
+  height: 140px !important;
+  width: 36px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 12px 0 !important;
+  box-sizing: border-box !important;
+}
+.ls-root .lsf-tool__controls-body .ant-slider-vertical {
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+html.dark .ls-root .lsf-tool__controls-body,
+html.unicorn .ls-root .lsf-tool__controls-body {
+  background-color: var(--card) !important;
+  color: var(--foreground) !important;
+  border: 1px solid var(--border) !important;
+}
+
+/* Ant Design Checkbox theme overrides */
+html.dark .ls-root .ant-checkbox-inner,
+html.unicorn .ls-root .ant-checkbox-inner {
+  background-color: var(--secondary) !important;
+  border-color: var(--border) !important;
+}
+html.dark .ls-root .ant-checkbox-checked .ant-checkbox-inner,
+html.unicorn .ls-root .ant-checkbox-checked .ant-checkbox-inner {
+  background-color: var(--primary) !important;
+  border-color: var(--primary) !important;
+}
+
+/* Ant Design Slider theme overrides */
+html.dark .ls-root .ant-slider-rail,
+html.unicorn .ls-root .ant-slider-rail {
+  background-color: var(--secondary) !important;
+}
+html.dark .ls-root .ant-slider-track {
+  background-color: var(--primary) !important;
+}
+html.dark .ls-root .ant-slider-handle,
+html.unicorn .ls-root .ant-slider-handle {
+  border-color: var(--primary) !important;
+  background-color: var(--card) !important;
+}
+html.dark .ls-root .ant-slider-handle:hover,
+html.dark .ls-root .ant-slider-handle:focus,
+html.unicorn .ls-root .ant-slider-handle:hover,
+html.unicorn .ls-root .ant-slider-handle:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--primary) 30%, transparent) !important;
+}
+html.unicorn .ls-root .ant-slider-track {
+  background-image: linear-gradient(
+    to bottom,
+    oklch(0.66 0.24 350),
+    oklch(0.62 0.2 285)
+  ) !important;
+}
+
 /* Ant Design (antd) component theme overrides inside the iframe */
 html.dark .ls-root .ant-tabs,
 html.unicorn .ls-root .ant-tabs,
@@ -728,12 +837,12 @@ export default function LabelerEmbed() {
       return originalFetch(input, init);
     };
 
-    XMLHttpRequest.prototype.open = function (method, url, ...args) {
+    (XMLHttpRequest.prototype.open as any) = function (this: XMLHttpRequest, method: string, url: string | URL, ...args: any[]) {
       let targetUrl = url;
       if (typeof url === "string" && (url.includes("/predict") || url.includes("/predictions"))) {
         targetUrl = "/api/ei/predict";
       }
-      return originalXhrOpen.call(this, method, targetUrl, ...args) as any;
+      return (originalXhrOpen as any).call(this, method, targetUrl, ...args);
     };
 
     const originalScrollIntoView = Element.prototype.scrollIntoView;
