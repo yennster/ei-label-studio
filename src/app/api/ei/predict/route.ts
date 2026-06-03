@@ -1,9 +1,75 @@
 import { NextResponse } from "next/server";
+import { put, del } from "@vercel/blob";
 import { getSession, studioMedia } from "@/lib/ei-server";
 import fs from "fs/promises";
 import path from "path";
 
 export const runtime = "nodejs";
+// A cold (sleeping) Hugging Face Space can take ~1 min to wake + load the model on
+// the first click; give the proxy room before the platform kills the function.
+export const maxDuration = 300;
+
+// The label-studio-ml backend only loads the model after /setup is called (the full
+// Label Studio server does this on "Connect Model"; we have no such server). After a
+// cold start it answers /predict with "Model is not loaded", so we lazily call /setup
+// and retry. Model loading is label-agnostic (it's mobile_sam), so a minimal config
+// with the tag names the backend expects is enough — the real labels come from the
+// per-request context.
+const SAM_SETUP_CONFIG =
+  '<View><Image name="image" value="$image"/>' +
+  '<KeyPointLabels name="KeyPointLabels" toName="image" smart="true"><Label value="x"/></KeyPointLabels>' +
+  '<RectangleLabels name="RectangleLabels" toName="image" smart="true"><Label value="x"/></RectangleLabels>' +
+  '<BrushLabels name="BrushLabels" toName="image" smart="true"><Label value="x"/></BrushLabels></View>';
+
+const EXT_BY_TYPE: Record<string, string> = {
+  "image/png": "png",
+  "image/jpeg": "jpg",
+  "image/webp": "webp",
+  "image/bmp": "bmp",
+};
+
+/**
+ * Make the sample image reachable to the (remote) SAM backend and return its URL
+ * plus a cleanup callback.
+ *
+ * Deployed (and any setup with a remote backend): upload to Vercel Blob — a
+ * temporary, unguessable, public URL the backend can fetch. The local `public/tmp`
+ * trick can't work here (read-only FS on Vercel, and a remote host can't reach
+ * localhost). Falls back to `public/tmp` only when no Blob token is configured,
+ * i.e. a fully-local app + local backend.
+ */
+async function stageImage(
+  bytes: Buffer,
+  contentType: string,
+  projectId: number,
+  sampleId: number,
+  req: Request,
+): Promise<{ url: string; cleanup: () => Promise<void> }> {
+  const ext = EXT_BY_TYPE[contentType.split(";")[0].trim()] ?? "jpg";
+
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    const blob = await put(`sam-input/${projectId}-${sampleId}.${ext}`, bytes, {
+      access: "public",
+      contentType,
+      addRandomSuffix: true,
+    });
+    return { url: blob.url, cleanup: () => del(blob.url).catch(() => {}) };
+  }
+
+  // Local fallback: serve from public/tmp at the app's own origin.
+  const filename = `${projectId}_${sampleId}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  const tempDir = path.join(process.cwd(), "public", "tmp");
+  const tempFilePath = path.join(tempDir, filename);
+  await fs.mkdir(tempDir, { recursive: true });
+  await fs.writeFile(tempFilePath, bytes);
+
+  const host = req.headers.get("host") || "localhost:3000";
+  const protocol = req.headers.get("x-forwarded-proto") || "http";
+  return {
+    url: `${protocol}://${host}/tmp/${filename}`,
+    cleanup: () => fs.unlink(tempFilePath).catch(() => {}),
+  };
+}
 
 export async function POST(req: Request) {
   const session = await getSession();
@@ -45,11 +111,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: false, error: "Invalid project ID or sample ID" }, { status: 400 });
   }
 
-  // Retrieve image bytes from Edge Impulse
+  // Retrieve image bytes from Edge Impulse (the backend can't auth to EI itself).
   let mediaResponse: Response;
   try {
-    const mediaPath = `/${projectId}/raw-data/${sampleId}/image`;
-    mediaResponse = await studioMedia(session, mediaPath);
+    mediaResponse = await studioMedia(session, `/${projectId}/raw-data/${sampleId}/image`);
     if (!mediaResponse.ok) {
       return NextResponse.json(
         { success: false, error: `Edge Impulse media error (${mediaResponse.status})` },
@@ -63,57 +128,60 @@ export async function POST(req: Request) {
     );
   }
 
-  // Save image to public/tmp for local ML backend access
-  const tempFilename = `${projectId}_${sampleId}_${Date.now()}_${Math.random().toString(36).substring(7)}.png`;
-  const tempDir = path.join(process.cwd(), "public", "tmp");
-  const tempFilePath = path.join(tempDir, tempFilename);
+  const contentType = mediaResponse.headers.get("content-type") || "image/jpeg";
+  const bytes = Buffer.from(await mediaResponse.arrayBuffer());
 
+  let staged: { url: string; cleanup: () => Promise<void> };
   try {
-    await fs.mkdir(tempDir, { recursive: true });
-    const buffer = Buffer.from(await mediaResponse.arrayBuffer());
-    await fs.writeFile(tempFilePath, buffer);
-  } catch (err) {
-    return NextResponse.json({ success: false, error: "Failed to write temp image file" }, { status: 500 });
-  }
-
-  // Rewrite task image URL to local static address
-  const host = req.headers.get("host") || "localhost:3000";
-  const protocol = req.headers.get("x-forwarded-proto") || "http";
-  const localImageUrl = `${protocol}://${host}/tmp/${tempFilename}`;
-  task.data.image = localImageUrl;
-
-  const mlBackendUrl = process.env.SAM_BACKEND_URL || "http://localhost:8003/predict";
-
-  try {
-    const mlResponse = await fetch(mlBackendUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-    });
-
-    if (!mlResponse.ok) {
-      const errorText = await mlResponse.text();
-      return NextResponse.json(
-        { success: false, error: `SAM Backend error (${mlResponse.status}): ${errorText}` },
-        { status: 502 },
-      );
-    }
-
-    const data = await mlResponse.json();
-    return NextResponse.json(data);
+    staged = await stageImage(bytes, contentType, projectId, sampleId, req);
   } catch (err) {
     return NextResponse.json(
-      { success: false, error: `Failed to connect to SAM Backend: ${err instanceof Error ? err.message : String(err)}` },
+      { success: false, error: `Failed to stage image for the SAM backend: ${err instanceof Error ? err.message : String(err)}` },
+      { status: 500 },
+    );
+  }
+
+  // Hand the backend a URL it can fetch, then forward the original prompt body.
+  task.data.image = staged.url;
+
+  const mlBackendUrl = process.env.SAM_BACKEND_URL || "http://localhost:8003/predict";
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (process.env.SAM_BACKEND_AUTH) headers["Authorization"] = process.env.SAM_BACKEND_AUTH;
+
+  const callPredict = () =>
+    fetch(mlBackendUrl, { method: "POST", headers, body: JSON.stringify(body) });
+
+  try {
+    let mlResponse = await callPredict();
+
+    // Cold-start recovery: load the model via /setup, then retry once.
+    if (!mlResponse.ok) {
+      let errorText = await mlResponse.text();
+      if (mlResponse.status >= 500 && /not loaded|setup\(\)/i.test(errorText)) {
+        const setupUrl = mlBackendUrl.replace(/\/predict\/?$/, "/setup");
+        await fetch(setupUrl, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ project: "0", schema: SAM_SETUP_CONFIG }),
+        }).catch(() => {});
+        mlResponse = await callPredict();
+        if (!mlResponse.ok) errorText = await mlResponse.text();
+      }
+      if (!mlResponse.ok) {
+        return NextResponse.json(
+          { success: false, error: `SAM backend error (${mlResponse.status}): ${errorText}` },
+          { status: 502 },
+        );
+      }
+    }
+
+    return NextResponse.json(await mlResponse.json());
+  } catch (err) {
+    return NextResponse.json(
+      { success: false, error: `Failed to connect to SAM backend: ${err instanceof Error ? err.message : String(err)}` },
       { status: 502 },
     );
   } finally {
-    // Delete temp image
-    try {
-      await fs.unlink(tempFilePath);
-    } catch (err) {
-      console.error("Failed to delete temp file:", err);
-    }
+    await staged.cleanup();
   }
 }
