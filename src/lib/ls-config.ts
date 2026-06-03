@@ -73,11 +73,18 @@ ${labelTags(labels, "Label")}
 
     case "audio":
       return `<View>
-  <Audio name="media" value="$audio" hotkey="space"/>
+  <Audio name="media" value="$audio" height="128" hotkey="space"/>
   <Header value="Choose a class"/>
   <Choices name="label" toName="media" choice="single" showInLine="true">
 ${labelTags(labels, "Choice")}
   </Choices>
+</View>`;
+
+    case "transcribe":
+      return `<View>
+  <Audio name="media" value="$audio" height="128" hotkey="space"/>
+  <Header value="Transcription"/>
+  <TextArea name="label" toName="media" editable="true" rows="3" placeholder="Type transcription here..."/>
 </View>`;
 
     case "timeseries": {

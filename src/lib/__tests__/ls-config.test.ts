@@ -67,13 +67,25 @@ describe("buildLabelConfig", () => {
   describe("audio", () => {
     const xml = buildLabelConfig({ task: "audio", labels: ["yes", "no"] });
 
-    it("uses an Audio object bound to $audio with a space hotkey", () => {
-      expect(xml).toContain('<Audio name="media" value="$audio" hotkey="space"/>');
+    it("uses an Audio object bound to $audio with height and space hotkey", () => {
+      expect(xml).toContain('<Audio name="media" value="$audio" height="128" hotkey="space"/>');
     });
 
     it("renders Choices for the labels", () => {
       expect(xml).toContain('<Choice value="yes"/>');
       expect(xml).toContain('<Choice value="no"/>');
+    });
+  });
+
+  describe("transcribe", () => {
+    const xml = buildLabelConfig({ task: "transcribe", labels: [] });
+
+    it("uses an Audio object with a space hotkey and height", () => {
+      expect(xml).toContain('<Audio name="media" value="$audio" height="128" hotkey="space"/>');
+    });
+
+    it("renders an editable TextArea bound to the audio", () => {
+      expect(xml).toContain('<TextArea name="label" toName="media" editable="true" rows="3" placeholder="Type transcription here..."/>');
     });
   });
 
@@ -120,7 +132,7 @@ describe("buildLabelConfig", () => {
     });
 
     it("wraps every config in a single View root", () => {
-      for (const task of ["classify", "detect", "audio", "timeseries", "sam"] as const) {
+      for (const task of ["classify", "detect", "audio", "timeseries", "sam", "transcribe"] as const) {
         const xml = buildLabelConfig({ task, labels: ["a"] });
         expect(xml.trim().startsWith("<View>")).toBe(true);
         expect(xml.trim().endsWith("</View>")).toBe(true);

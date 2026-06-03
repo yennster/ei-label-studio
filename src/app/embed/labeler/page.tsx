@@ -60,6 +60,11 @@ function serializeAnnotation(annotation: unknown): unknown {
 
 /* Restyle Label Studio's action bar to match the app's shadcn buttons. */
 const LS_THEME = `
+body {
+  background-color: var(--background) !important;
+  background: var(--background) !important;
+}
+
 /* The editor centers itself with \`margin: 0 auto\` and clamps to a fixed
    300px width under its max-width:760px breakpoint. Inside our iframe that
    leaves large dead margins either side of the canvas. Anchor it left and
@@ -817,6 +822,44 @@ html.unicorn .ant-select-item-option-selected:hover {
   margin: 0 !important;
   flex-wrap: nowrap !important;
 }
+
+/* Overrides for Label Studio error containers (e.g. .error--O7ftV) to match the app's theme */
+.ls-root [class*="error--"] {
+  background-color: color-mix(in oklch, var(--destructive) 15%, var(--card)) !important;
+  border: 1px solid color-mix(in oklch, var(--destructive) 30%, var(--border)) !important;
+  color: var(--foreground) !important;
+  border-radius: var(--radius, 6px) !important;
+  font-family: inherit !important;
+}
+
+.ls-root [class*="error--"] code {
+  background-color: color-mix(in oklch, var(--destructive) 25%, var(--card)) !important;
+  color: color-mix(in oklch, var(--destructive) 85%, var(--foreground)) !important;
+  border: 1px solid color-mix(in oklch, var(--destructive) 40%, var(--border)) !important;
+  padding: 2px 4px !important;
+  border-radius: 4px !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+}
+
+.ls-root [class*="error--"] a {
+  color: var(--primary) !important;
+  text-decoration: underline !important;
+  font-weight: 500 !important;
+}
+
+.ls-root [class*="error--"] a:hover {
+  color: color-mix(in oklch, var(--primary) 85%, black) !important;
+}
+
+/* Typographical and header overrides for dark/unicorn modes to ensure good readability */
+html.dark .ls-root h1, html.dark .ls-root h2, html.dark .ls-root h3,
+html.dark .ls-root h4, html.dark .ls-root h5, html.dark .ls-root h6,
+html.dark .ls-root .ant-typography,
+html.unicorn .ls-root h1, html.unicorn .ls-root h2, html.unicorn .ls-root h3,
+html.unicorn .ls-root h4, html.unicorn .ls-root h5, html.unicorn .ls-root h6,
+html.unicorn .ls-root .ant-typography {
+  color: var(--foreground) !important;
+}
 `;
 
 function injectTheme() {
@@ -943,14 +986,18 @@ export default function LabelerEmbed() {
 
     // Block Element.prototype.scrollTo and .scroll on body/documentElement.
     // Label Studio calls `container.scroll({top, left, behavior})` directly.
-    Element.prototype.scrollTo = function (...args: unknown[]) {
-      if (isDocRoot(this)) return;
-      return (originalElementScrollTo as Function).apply(this, args);
-    };
-    Element.prototype.scroll = function (...args: unknown[]) {
-      if (isDocRoot(this)) return;
-      return (originalElementScroll as Function).apply(this, args);
-    };
+    if (originalElementScrollTo) {
+      Element.prototype.scrollTo = function (...args: any[]) {
+        if (isDocRoot(this)) return;
+        return originalElementScrollTo.apply(this, args as any);
+      };
+    }
+    if (originalElementScroll) {
+      Element.prototype.scroll = function (...args: any[]) {
+        if (isDocRoot(this)) return;
+        return originalElementScroll.apply(this, args as any);
+      };
+    }
 
     // Force preventScroll on ALL focus calls.
     HTMLElement.prototype.focus = function (options) {

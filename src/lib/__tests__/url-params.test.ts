@@ -73,6 +73,7 @@ describe("parsePreset", () => {
     it("parses task", () => {
       expect(parsePreset("task=detect").task).toBe("detect");
       expect(parsePreset("task=sam").task).toBe("sam");
+      expect(parsePreset("task=transcribe").task).toBe("transcribe");
     });
 
     it("drops an invalid task", () => {

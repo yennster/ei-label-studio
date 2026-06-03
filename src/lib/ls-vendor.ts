@@ -7,7 +7,7 @@
  * bundle files are re-vendored, otherwise browsers will keep serving the old
  * bytes for up to a year.
  */
-export const LS_VENDOR_VERSION = "1.4.0";
+export const LS_VENDOR_VERSION = "1.4.1";
 
 export const LS_VENDOR_JS = `/vendor/label-studio/main.js?v=${LS_VENDOR_VERSION}`;
 export const LS_VENDOR_CSS = `/vendor/label-studio/main.css?v=${LS_VENDOR_VERSION}`;

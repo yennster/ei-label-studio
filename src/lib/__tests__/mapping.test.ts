@@ -35,6 +35,11 @@ describe("sampleToTask", () => {
     expect(task.data).toEqual({ audio: mediaUrl(2, 1, "audio") });
   });
 
+  it("uses the audio data field for transcribe tasks", () => {
+    const task = sampleToTask(baseSample({ filename: "s.wav" }), 2, "transcribe");
+    expect(task.data).toEqual({ audio: mediaUrl(2, 1, "audio") });
+  });
+
   it("uses the timeseries data field for timeseries tasks", () => {
     const task = sampleToTask(baseSample(), 2, "timeseries");
     expect(task.data).toEqual({ timeseries: mediaUrl(2, 1, "timeseries") });
@@ -66,6 +71,19 @@ describe("sampleToTask", () => {
     it('treats the literal "unlabeled" as no label (seeds empty annotation)', () => {
       const task = sampleToTask(baseSample({ label: "unlabeled" }), 1, "audio");
       expect(task.annotations).toEqual([{ result: [] }]);
+    });
+  });
+
+  describe("transcribe seeding", () => {
+    it("seeds the existing label as a textarea annotation", () => {
+      const task = sampleToTask(baseSample({ label: "hello world" }), 1, "transcribe");
+      expect(task.annotations).toEqual([
+        {
+          result: [
+            { from_name: "label", to_name: "media", type: "textarea", value: { text: ["hello world"] } },
+          ],
+        },
+      ]);
     });
   });
 
@@ -216,6 +234,11 @@ describe("labelFromAnnotation", () => {
   it("falls back to labels when choices is absent", () => {
     const annotation = { result: [{ value: { labels: ["speech"] } }] };
     expect(labelFromAnnotation(annotation)).toBe("speech");
+  });
+
+  it("returns the text value from textarea results", () => {
+    const annotation = { result: [{ type: "textarea", value: { text: ["hello world"] } }] };
+    expect(labelFromAnnotation(annotation)).toBe("hello world");
   });
 
   it("returns null when no choice/label is present", () => {
