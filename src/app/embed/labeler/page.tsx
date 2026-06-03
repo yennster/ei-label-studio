@@ -399,10 +399,13 @@ html.dark .lsf-dynamic-preannotations-control *,
 html.unicorn .lsf-dynamic-preannotations-control * {
   color: var(--foreground) !important;
 }
+/* Anchor the "Auto accept suggestions" popover to the top-RIGHT so it drops over
+   the sidebar column (1fr canvas + 320px sidebar) instead of covering the image. */
 .lsf-dynamic-preannotations-control {
   position: absolute !important;
   top: 44px !important;
-  left: 16px !important;
+  right: 16px !important;
+  left: auto !important;
   transform: none !important;
   z-index: 101 !important;
   margin-top: 2px !important;
