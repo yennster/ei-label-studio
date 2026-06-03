@@ -16,6 +16,9 @@ back to Edge Impulse — all driven by shareable URLs.
   The modality is auto-detected per sample, or you can force a template.
 - **Round-trips to EI** — samples are pulled via the Studio API; the current label is shown as a
   pre-annotation; submitting relabels the sample back in Edge Impulse.
+- **Interactive segmentation (SAM)** — a Segment Anything template enables Point2Label /
+  Bbox2Label: click or drag and a hosted MobileSAM backend returns a mask + bounding box. The
+  mask stays in the canvas; the bounding box is pushed back to Edge Impulse. See [`ml-backend/`](ml-backend/).
 - **URL-driven** — deep-link presets (project, category, template, filters, theme, embed…) in the
   spirit of [synthetic-data-studio](https://github.com/yennster/synthetic-data-studio/blob/main/docs/url-parameters.md).
   See [`docs/url-parameters.md`](docs/url-parameters.md) or the in-app [`/docs`](https://label.jennyspeelman.dev/docs) page.
@@ -36,6 +39,27 @@ Browser --POST /api/ei/session--> http-only cookie (apiKey + projectId)
 All Edge Impulse traffic is proxied through same-origin Next.js Route Handlers (Edge Impulse
 blocks browser CORS). The Label Studio Frontend runs entirely client-side — there is **no**
 Label Studio server. Its bundle is vendored under `public/vendor/label-studio`.
+
+## Interactive segmentation (SAM)
+
+The **Image · Segment Anything (SAM)** template adds OpenMMLab
+[`label_anything`](https://github.com/open-mmlab/playground/tree/main/label_anything)-style
+Point2Label / Bbox2Label. The PyTorch + SAM stack can't run on Vercel (no containers; functions
+cap at 500 MB), so the model is hosted separately and called server-side:
+
+```
+Canvas (smart tool) --> POST /api/ei/predict --> SAM backend (Hugging Face Space)
+                              |  fetch image from EI, hand backend a temporary Blob URL
+                              \- returns mask + bbox; the box is saved to EI on submit
+```
+
+Setup:
+
+1. **Deploy the backend** — a Hugging Face Docker Space; see [`ml-backend/`](ml-backend/).
+2. **Link a Vercel Blob store** to the project (Storage tab) — this sets `BLOB_READ_WRITE_TOKEN`,
+   used to give the backend a temporary public URL for each image.
+3. **Set `SAM_BACKEND_URL`** to the Space's `/predict` URL (and optionally `SAM_BACKEND_AUTH` for
+   a private Space). See [`.env.example`](.env.example).
 
 ## Local development
 
@@ -60,5 +84,7 @@ Deployed on Vercel.
 - For **detect** (bounding-box) templates, edited boxes are pushed back to Edge Impulse via the
   Studio API. For **time-series** templates, the sample-level label is updated, but per-segment
   annotations are not yet pushed back.
+- For **SAM**, the mask is an in-canvas labeling aid only — Edge Impulse stores bounding boxes,
+  so the mask's bounding box is what gets saved. Requires the hosted backend ([`ml-backend/`](ml-backend/)).
 - The standalone Label Studio Frontend npm package no longer ships a built bundle, so a known-good
   build is vendored in this repo and loaded on demand.

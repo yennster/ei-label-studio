@@ -18,7 +18,7 @@ export function sampleToTask(
   let predictions: LSPrediction[] | undefined;
   let annotations: unknown[] = [];
 
-  if (task === "classify" || task === "detect") {
+  if (task === "classify" || task === "detect" || task === "sam") {
     data.image = mediaUrl(projectId, sample.id, "image");
   } else if (task === "audio" || task === "transcribe") {
     data.audio = mediaUrl(projectId, sample.id, "audio");
@@ -53,6 +53,29 @@ export function sampleToTask(
       const result: LSResult[] = sample.boundingBoxes.map((b) => ({
         from_name: "label",
         to_name: "media",
+        type: "rectanglelabels",
+        original_width: dims.width,
+        original_height: dims.height,
+        image_rotation: 0,
+        value: {
+          x: (b.x / dims.width) * 100,
+          y: (b.y / dims.height) * 100,
+          width: (b.width / dims.width) * 100,
+          height: (b.height / dims.height) * 100,
+          rotation: 0,
+          rectanglelabels: [b.label],
+        },
+      }));
+      annotations = [{ result }];
+    }
+  } else if (task === "sam") {
+    // Seed existing bounding boxes for the SAM template (where the tags
+    // are named RectangleLabels and target the 'image' canvas element)
+    const dims = sample.imageDimensions;
+    if (sample.boundingBoxes?.length && dims?.width && dims?.height) {
+      const result: LSResult[] = sample.boundingBoxes.map((b) => ({
+        from_name: "RectangleLabels",
+        to_name: "image",
         type: "rectanglelabels",
         original_width: dims.width,
         original_height: dims.height,

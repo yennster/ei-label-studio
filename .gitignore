@@ -32,6 +32,10 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+
+# local SAM image staging (predict route fallback when no Vercel Blob token)
+/public/tmp/
 
 # vercel
 .vercel
@@ -42,3 +46,4 @@ next-env.d.ts
 
 # local agent tooling
 .claude/
+.env*.local

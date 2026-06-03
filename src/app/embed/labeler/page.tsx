@@ -358,6 +358,146 @@ html.unicorn .ls-root .lsf-tool__key * {
   font-size: 11px !important;
 }
 
+/* Auto-annotation controls topbar theme overrides */
+.lsf-dynamic-preannotations {
+  padding: 0 16px !important;
+}
+html.dark .lsf-dynamic-preannotations,
+html.unicorn .lsf-dynamic-preannotations {
+  background-color: var(--card) !important;
+  color: var(--foreground) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+html.dark .lsf-dynamic-preannotations *,
+html.unicorn .lsf-dynamic-preannotations * {
+  color: var(--foreground) !important;
+}
+
+/* Ensure the toggle and its text label sit inline and do not overlap */
+.lsf-dynamic-preannotations .lsf-field-label_placement_right {
+  display: flex !important;
+  flex-direction: row-reverse !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+.lsf-dynamic-preannotations .lsf-field-label__text {
+  padding: 0 !important;
+  margin: 0 !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+}
+
+/* Auto-annotation settings dropdown theme and layout overrides (without .ls-root to match portal wrappers) */
+html.dark .lsf-dynamic-preannotations-control,
+html.unicorn .lsf-dynamic-preannotations-control {
+  background-color: var(--card) !important;
+  color: var(--foreground) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+html.dark .lsf-dynamic-preannotations-control *,
+html.unicorn .lsf-dynamic-preannotations-control * {
+  color: var(--foreground) !important;
+}
+.lsf-dynamic-preannotations-control {
+  position: absolute !important;
+  top: 44px !important;
+  left: 16px !important;
+  transform: none !important;
+  z-index: 101 !important;
+  margin-top: 2px !important;
+  padding: 8px 12px !important;
+}
+
+/* <Header> tag text — LS renders it as a heading whose default color is dark,
+   leaving the SAM mode hints near-invisible on a dark canvas. Make them readable. */
+html.dark .ls-root :is(h1, h2, h3, h4, h5, h6),
+html.unicorn .ls-root :is(h1, h2, h3, h4, h5, h6) {
+  color: var(--foreground) !important;
+}
+
+/* Custom toggles (lsf-toggle) theme overrides */
+html.dark .ls-root .lsf-toggle,
+html.unicorn .ls-root .lsf-toggle {
+  background: var(--muted) !important;
+  color: var(--primary) !important;
+  box-shadow: inset 0 0 0 1px var(--border) !important;
+}
+html.dark .ls-root .lsf-toggle__indicator:before,
+html.unicorn .ls-root .lsf-toggle__indicator:before {
+  background: var(--foreground) !important;
+  box-shadow: none !important;
+}
+html.dark .ls-root .lsf-toggle_checked .lsf-toggle__indicator:before,
+html.unicorn .ls-root .lsf-toggle_checked .lsf-toggle__indicator:before {
+  background: var(--primary-foreground) !important;
+}
+
+/* Vertical slider controls popover layout and alignment overrides */
+.ls-root .lsf-tool__controls-body {
+  height: auto !important;
+  min-height: 120px !important;
+  width: 32px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 10px 0 !important;
+  box-sizing: border-box !important;
+}
+.ls-root .lsf-tool__controls-body .ant-slider-vertical {
+  height: 100px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+html.dark .ls-root .lsf-tool__controls-body,
+html.unicorn .ls-root .lsf-tool__controls-body {
+  background-color: var(--card) !important;
+  color: var(--foreground) !important;
+  border: 1px solid var(--border) !important;
+}
+
+/* Ant Design Checkbox theme overrides */
+html.dark .ls-root .ant-checkbox-inner,
+html.unicorn .ls-root .ant-checkbox-inner {
+  background-color: var(--secondary) !important;
+  border-color: var(--border) !important;
+}
+html.dark .ls-root .ant-checkbox-checked .ant-checkbox-inner,
+html.unicorn .ls-root .ant-checkbox-checked .ant-checkbox-inner {
+  background-color: var(--primary) !important;
+  border-color: var(--primary) !important;
+}
+
+/* Ant Design Slider theme overrides */
+html.dark .ls-root .ant-slider-rail,
+html.unicorn .ls-root .ant-slider-rail {
+  background-color: var(--secondary) !important;
+}
+html.dark .ls-root .ant-slider-track {
+  background-color: var(--primary) !important;
+}
+html.dark .ls-root .ant-slider-handle,
+html.unicorn .ls-root .ant-slider-handle {
+  border-color: var(--primary) !important;
+  background-color: var(--card) !important;
+}
+html.dark .ls-root .ant-slider-handle:hover,
+html.dark .ls-root .ant-slider-handle:focus,
+html.unicorn .ls-root .ant-slider-handle:hover,
+html.unicorn .ls-root .ant-slider-handle:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--primary) 30%, transparent) !important;
+}
+html.unicorn .ls-root .ant-slider-track {
+  background-image: linear-gradient(
+    to bottom,
+    oklch(0.66 0.24 350),
+    oklch(0.62 0.2 285)
+  ) !important;
+}
+
 /* Ant Design (antd) component theme overrides inside the iframe */
 html.dark .ls-root .ant-tabs,
 html.unicorn .ls-root .ant-tabs,
@@ -742,6 +882,8 @@ const INTERFACES = [
   "instruction",
   "side-column",
   "annotations:current",
+  "auto-annotation",
+  "predictions:menu",
 ];
 
 export default function LabelerEmbed() {
@@ -756,6 +898,61 @@ export default function LabelerEmbed() {
     // unconditionally inside this iframe to stop the page from jumping when a
     // bounding box is selected (which triggers sidebar highlight + scrollIntoView).
     // ---------------------------------------------------------------------------
+
+    const origin = window.location.origin;
+    const post = (type: string, annotation?: unknown) =>
+      window.parent.postMessage({ source: "ls-embed", type, annotation }, origin);
+
+    const originalFetch = window.fetch;
+    const originalXhrOpen = XMLHttpRequest.prototype.open;
+
+    window.fetch = async function (input, init) {
+      const urlStr = typeof input === "string" ? input : (input as Request).url;
+      if (urlStr.includes("/predict") || urlStr.includes("/predictions")) {
+        const redirectUrl = "/api/ei/predict";
+        try {
+          const res = await originalFetch(redirectUrl, init);
+          if (!res.ok) {
+            const cloned = res.clone();
+            cloned.json().then(data => {
+              const errMsg = data && data.error ? data.error : `Status ${res.status}`;
+              post("error", `Auto-Annotation failed: ${errMsg}`);
+            }).catch(() => {
+              cloned.text().then(text => {
+                post("error", `Auto-Annotation failed: ${text || res.statusText}`);
+              });
+            });
+          }
+          return res;
+        } catch (err: any) {
+          post("error", `Auto-Annotation network error: ${err?.message || String(err)}`);
+          throw err;
+        }
+      }
+      return originalFetch(input, init);
+    };
+
+    (XMLHttpRequest.prototype.open as any) = function (this: XMLHttpRequest, method: string, url: string | URL, ...args: any[]) {
+      let targetUrl = url;
+      if (typeof url === "string" && (url.includes("/predict") || url.includes("/predictions"))) {
+        targetUrl = "/api/ei/predict";
+        const originalOnReadyStateChange = this.onreadystatechange;
+        this.onreadystatechange = function (e) {
+          if (this.readyState === 4) {
+            if (this.status >= 400 || this.status === 0) {
+              try {
+                const data = JSON.parse(this.responseText);
+                post("error", `Auto-Annotation failed: ${data.error || "Status " + this.status}`);
+              } catch {
+                post("error", `Auto-Annotation failed with status ${this.status || "connection refused"}. Is the ML backend running?`);
+              }
+            }
+          }
+          if (originalOnReadyStateChange) originalOnReadyStateChange.call(this, e);
+        };
+      }
+      return (originalXhrOpen as any).call(this, method, targetUrl, ...args);
+    };
 
     const originalScrollIntoView = Element.prototype.scrollIntoView;
     const originalScrollIntoViewIfNeeded = (Element.prototype as any).scrollIntoViewIfNeeded;
@@ -836,10 +1033,6 @@ export default function LabelerEmbed() {
     window.scroll = function () {};
     window.scrollBy = function () {};
 
-    const origin = window.location.origin;
-    const post = (type: string, annotation?: unknown) =>
-      window.parent.postMessage({ source: "ls-embed", type, annotation }, origin);
-
     function onError(e: ErrorEvent) {
       post("error", e.message);
     }
@@ -898,6 +1091,81 @@ export default function LabelerEmbed() {
             onUpdateAnnotation: (_ls: unknown, a: unknown) => post("submit", serializeAnnotation(a)),
             onSkipTask: () => post("skip"),
           });
+
+          // Interactive ML (SAM): standalone LSF fires the `regionFinishedDrawing`
+          // event when a smart-tool region is placed and expects the host to feed
+          // predictions via store.loadSuggestions(promise, transform). It does NOT
+          // fetch /predict on its own, so wiring this event is what actually drives
+          // Point2Label / Bbox2Label.
+          const ls = instanceRef.current as any;
+          if (ls?.on) {
+            console.log(
+              "[SAM] interactive ML wired — listening for regionFinishedDrawing.",
+              "store?", !!ls.store, "loadSuggestions?", !!ls.store?.loadSuggestions,
+            );
+            ls.on("regionFinishedDrawing", (...args: any[]) => {
+              console.log("[SAM] regionFinishedDrawing fired with", args.length, "arg(s)");
+              try {
+                const region =
+                  args.find((a) => a && (a.results || a.type || a.serialize)) ?? args[1] ?? args[0];
+                const store = ls.store;
+                const annotation = store?.annotationStore?.selected;
+                if (!annotation) return;
+                const all: any[] = annotation.serializeAnnotation?.() ?? [];
+                const isSmart = (r: any) =>
+                  r?.type === "keypointlabels" || r?.type === "rectanglelabels";
+                const match = region?.id ? all.find((r) => r.id === region.id) : null;
+                const chosen = match ? [match] : all.filter(isSmart).slice(-1);
+                // The OpenMMLab backend reads value.labels for keypoints; serialized
+                // smart regions only carry value.keypointlabels, so mirror it.
+                const result = chosen.map((r: any) => {
+                  const value = { ...r.value };
+                  if (r.type === "keypointlabels" && value.keypointlabels && !value.labels)
+                    value.labels = value.keypointlabels;
+                  return { ...r, value };
+                });
+                console.log("[SAM] regionFinishedDrawing → context", result);
+                if (!result.length) return;
+                const ow = result[0]?.original_width;
+                const oh = result[0]?.original_height;
+                const reqBody = {
+                  tasks: [{ data: task.data }],
+                  label_config: config,
+                  params: { context: { result } },
+                };
+                const promise = originalFetch("/api/ei/predict", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(reqBody),
+                }).then(async (res) => {
+                  const data = await res.json().catch(() => ({}));
+                  console.log("[SAM] /api/ei/predict", res.status, data);
+                  if (!res.ok) {
+                    post("error", "Auto-Annotation failed: " + (data?.error || res.status));
+                    throw new Error(String(res.status));
+                  }
+                  return data;
+                });
+                // Backend bbox/brush results omit original_width/height; add them back
+                // so the suggestions render and map correctly.
+                const transform = (resp: any) =>
+                  (resp?.results?.[0]?.result ?? []).map((r: any) => ({
+                    original_width: ow,
+                    original_height: oh,
+                    image_rotation: 0,
+                    ...r,
+                  }));
+                const load =
+                  store.loadSuggestions?.bind(store) ?? annotation.loadSuggestions?.bind(annotation);
+                if (load) load(promise, transform);
+                else console.warn("[SAM] no loadSuggestions() available on store/annotation");
+              } catch (e: any) {
+                post("error", "Auto-Annotation failed: " + (e?.message ?? String(e)));
+              }
+            });
+          } else {
+            console.warn("[SAM] LabelStudio instance exposes no .on(); interactive ML unwired");
+          }
           injectTheme();
         })
         .catch((e) => {
@@ -956,6 +1224,8 @@ export default function LabelerEmbed() {
       window.scrollTo = originalWindowScrollTo;
       window.scroll = originalWindowScroll;
       window.scrollBy = originalWindowScrollBy;
+      window.fetch = originalFetch;
+      XMLHttpRequest.prototype.open = originalXhrOpen;
       instanceRef.current?.destroy?.();
       instanceRef.current = null;
     };

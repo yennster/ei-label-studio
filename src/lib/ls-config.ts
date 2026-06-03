@@ -54,6 +54,23 @@ ${labelTags(labels, "Label")}
   </RectangleLabels>
 </View>`;
 
+    case "sam":
+      return `<View>
+  <Image name="image" value="$image" zoom="true" zoomControl="true"/>
+  <Header value="Mode 1: Click Points (Point2Label) — Select label below &amp; click image:"/>
+  <KeyPointLabels name="KeyPointLabels" toName="image" smart="true">
+${labelTags(labels, "Label")}
+  </KeyPointLabels>
+  <Header value="Mode 2: Draw Bbox (Bbox2Label) — Select label below &amp; draw box on image:"/>
+  <RectangleLabels name="RectangleLabels" toName="image" smart="true">
+${labelTags(labels, "Label")}
+  </RectangleLabels>
+  <Header value="Mode 3: Brush Masks — Select label below &amp; draw masks on image:"/>
+  <BrushLabels name="BrushLabels" toName="image" smart="true">
+${labelTags(labels, "Label")}
+  </BrushLabels>
+</View>`;
+
     case "audio":
       return `<View>
   <Audio name="media" value="$audio" height="128" hotkey="space"/>
