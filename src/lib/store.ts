@@ -37,12 +37,33 @@ interface AppState {
   reset: () => void;
 }
 
+const STORAGE_KEY = "ei-selected-labeling-template";
+
+const getInitialTask = (): LabelTask | null => {
+  if (typeof window !== "undefined") {
+    const val = localStorage.getItem(STORAGE_KEY);
+    if (val === "auto") return null;
+    if (val) return val as LabelTask;
+  }
+  return null;
+};
+
+const saveTask = (task: LabelTask | null) => {
+  if (typeof window !== "undefined") {
+    if (task === null) {
+      localStorage.setItem(STORAGE_KEY, "auto");
+    } else {
+      localStorage.setItem(STORAGE_KEY, task);
+    }
+  }
+};
+
 export const useApp = create<AppState>((set) => ({
   connected: false,
   project: null,
   category: "training",
   labelFilter: [],
-  task: null,
+  task: getInitialTask(),
   mode: "relabel",
   autoAdvance: true,
   autoAnnotate: false,
@@ -56,22 +77,29 @@ export const useApp = create<AppState>((set) => ({
 
   setConnected: (project) => set({ connected: !!project, project }),
   applyPreset: (preset) =>
-    set((s) => ({
-      preset,
-      category: preset.category ?? s.category,
-      labelFilter: preset.labels ?? s.labelFilter,
-      task: preset.task ?? s.task,
-      mode: preset.mode ?? s.mode,
-      autoAdvance: preset.autoAdvance ?? s.autoAdvance,
-      autoAnnotate: preset.autoAnnotate ?? s.autoAnnotate,
-      autoAccept: preset.autoAccept ?? s.autoAccept,
-      embed: preset.embed ?? s.embed,
-      limit: preset.limit ?? s.limit,
-    })),
+    set((s) => {
+      const task = preset.task !== undefined ? preset.task : s.task;
+      saveTask(task);
+      return {
+        preset,
+        category: preset.category ?? s.category,
+        labelFilter: preset.labels ?? s.labelFilter,
+        task,
+        mode: preset.mode ?? s.mode,
+        autoAdvance: preset.autoAdvance ?? s.autoAdvance,
+        autoAnnotate: preset.autoAnnotate ?? s.autoAnnotate,
+        autoAccept: preset.autoAccept ?? s.autoAccept,
+        embed: preset.embed ?? s.embed,
+        limit: preset.limit ?? s.limit,
+      };
+    }),
   setSamples: (samples, totalCount) => set({ samples, totalCount, activeIndex: 0 }),
   setActiveIndex: (activeIndex) => set({ activeIndex }),
   setCategory: (category) => set({ category }),
-  setTask: (task) => set({ task }),
+  setTask: (task) => {
+    saveTask(task);
+    set({ task });
+  },
   setLabelFilter: (labelFilter) => set({ labelFilter }),
   setAutoAdvance: (autoAdvance) => set({ autoAdvance }),
   markLabeled: (sampleId, label, boundingBoxes) =>
