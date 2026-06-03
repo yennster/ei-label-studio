@@ -354,47 +354,47 @@ html.unicorn .ls-root .lsf-tool__key * {
 }
 
 /* Auto-annotation controls topbar theme overrides */
-.ls-root .lsf-dynamic-preannotations {
+.lsf-dynamic-preannotations {
   padding: 0 16px !important;
 }
-html.dark .ls-root .lsf-dynamic-preannotations,
-html.unicorn .ls-root .lsf-dynamic-preannotations {
+html.dark .lsf-dynamic-preannotations,
+html.unicorn .lsf-dynamic-preannotations {
   background-color: var(--card) !important;
   color: var(--foreground) !important;
   border-bottom: 1px solid var(--border) !important;
 }
-html.dark .ls-root .lsf-dynamic-preannotations *,
-html.unicorn .ls-root .lsf-dynamic-preannotations * {
+html.dark .lsf-dynamic-preannotations *,
+html.unicorn .lsf-dynamic-preannotations * {
   color: var(--foreground) !important;
 }
 
 /* Ensure the toggle and its text label sit inline and do not overlap */
-.ls-root .lsf-dynamic-preannotations .lsf-field-label_placement_right {
+.lsf-dynamic-preannotations .lsf-field-label_placement_right {
   display: flex !important;
   flex-direction: row-reverse !important;
   align-items: center !important;
   gap: 8px !important;
 }
-.ls-root .lsf-dynamic-preannotations .lsf-field-label__text {
+.lsf-dynamic-preannotations .lsf-field-label__text {
   padding: 0 !important;
   margin: 0 !important;
   font-size: 14px !important;
   font-weight: 500 !important;
 }
 
-/* Auto-annotation settings dropdown theme and layout overrides */
-html.dark .ls-root .lsf-dynamic-preannotations-control,
-html.unicorn .ls-root .lsf-dynamic-preannotations-control {
+/* Auto-annotation settings dropdown theme and layout overrides (without .ls-root to match portal wrappers) */
+html.dark .lsf-dynamic-preannotations-control,
+html.unicorn .lsf-dynamic-preannotations-control {
   background-color: var(--card) !important;
   color: var(--foreground) !important;
   border: 1px solid var(--border) !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
 }
-html.dark .ls-root .lsf-dynamic-preannotations-control *,
-html.unicorn .ls-root .lsf-dynamic-preannotations-control * {
+html.dark .lsf-dynamic-preannotations-control *,
+html.unicorn .lsf-dynamic-preannotations-control * {
   color: var(--foreground) !important;
 }
-.ls-root .lsf-dynamic-preannotations-control {
+.lsf-dynamic-preannotations-control {
   position: absolute !important;
   top: 44px !important;
   left: 16px !important;
@@ -402,6 +402,15 @@ html.unicorn .ls-root .lsf-dynamic-preannotations-control * {
   z-index: 101 !important;
   margin-top: 2px !important;
   padding: 8px 12px !important;
+}
+
+/* Highlight the Smart Tool (magic wand) button to guide user action */
+.ls-root .lsf-tool_smart:not(.lsf-tool_active) .lsf-tool__icon {
+  border: 1px solid var(--primary) !important;
+  background-color: color-mix(in oklch, var(--primary) 15%, transparent) !important;
+}
+.ls-root .lsf-tool_smart .lsf-tool__icon:hover {
+  background-color: color-mix(in oklch, var(--primary) 25%, transparent) !important;
 }
 
 /* Custom toggles (lsf-toggle) theme overrides */
