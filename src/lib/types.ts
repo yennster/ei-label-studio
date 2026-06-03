@@ -7,6 +7,24 @@ export type Modality = "image" | "audio" | "timeseries" | "video" | "unknown";
 /** Labeling template chosen for the workspace. */
 export type LabelTask = "classify" | "detect" | "audio" | "timeseries" | "sam" | "transcribe";
 
+/** Per-class sample counts from `/raw-data/project-metadata`. */
+export interface EIClassCount {
+  label: string;
+  dataCount: number;
+}
+
+export interface EIClassMetadata {
+  labels?: EIClassCount[];
+}
+
+export interface EIProjectMetadata {
+  type?: string;
+  all?: EIClassMetadata;
+  training?: EIClassMetadata;
+  testing?: EIClassMetadata;
+  anomaly?: EIClassMetadata;
+}
+
 export type WorkMode = "relabel" | "import";
 
 export interface EIProject {

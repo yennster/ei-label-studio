@@ -185,7 +185,7 @@ export function Workspace() {
       void getProjectMetadata()
         .then((res) => {
           if (res?.metadata?.type === "classes") {
-            const labels = res.metadata.all?.labels?.map((l: any) => l.label) ?? [];
+            const labels = res.metadata.all?.labels?.map((l) => l.label) ?? [];
             setMetadataLabels(labels);
           }
         })

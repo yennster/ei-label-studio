@@ -77,7 +77,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: false, error: "Not connected" }, { status: 401 });
   }
 
-  let body: any;
+  let body: { tasks?: { data?: { image?: string } }[] };
   try {
     body = await req.json();
   } catch {
@@ -142,7 +142,7 @@ export async function POST(req: Request) {
   }
 
   // Hand the backend a URL it can fetch, then forward the original prompt body.
-  task.data.image = staged.url;
+  if (task.data) task.data.image = staged.url;
 
   const mlBackendUrl = process.env.SAM_BACKEND_URL || "http://localhost:8003/predict";
   const headers: Record<string, string> = { "Content-Type": "application/json" };

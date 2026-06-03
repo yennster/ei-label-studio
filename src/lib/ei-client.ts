@@ -1,4 +1,4 @@
-import type { EIBoundingBox, EICategory, EIProject, EISample } from "./types";
+import type { EIBoundingBox, EICategory, EIProject, EIProjectMetadata, EISample } from "./types";
 
 /** Thin client over our same-origin /api/ei/* proxy. */
 
@@ -44,7 +44,7 @@ export async function getProjects(): Promise<EIProject[]> {
   return body.projects ?? [];
 }
 
-export async function getProjectMetadata(): Promise<{ metadata?: any }> {
+export async function getProjectMetadata(): Promise<{ metadata?: EIProjectMetadata }> {
   const res = await fetch("/api/ei/project-metadata");
   return jsonOrThrow(res);
 }
