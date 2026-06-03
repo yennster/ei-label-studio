@@ -1044,6 +1044,76 @@ export default function LabelerEmbed() {
             onUpdateAnnotation: (_ls: unknown, a: unknown) => post("submit", serializeAnnotation(a)),
             onSkipTask: () => post("skip"),
           });
+
+          // Interactive ML (SAM): standalone LSF fires the `regionFinishedDrawing`
+          // event when a smart-tool region is placed and expects the host to feed
+          // predictions via store.loadSuggestions(promise, transform). It does NOT
+          // fetch /predict on its own, so wiring this event is what actually drives
+          // Point2Label / Bbox2Label.
+          const ls = instanceRef.current as any;
+          if (ls?.on) {
+            ls.on("regionFinishedDrawing", (...args: any[]) => {
+              try {
+                const region =
+                  args.find((a) => a && (a.results || a.type || a.serialize)) ?? args[1] ?? args[0];
+                const store = ls.store;
+                const annotation = store?.annotationStore?.selected;
+                if (!annotation) return;
+                const all: any[] = annotation.serializeAnnotation?.() ?? [];
+                const isSmart = (r: any) =>
+                  r?.type === "keypointlabels" || r?.type === "rectanglelabels";
+                const match = region?.id ? all.find((r) => r.id === region.id) : null;
+                const chosen = match ? [match] : all.filter(isSmart).slice(-1);
+                // The OpenMMLab backend reads value.labels for keypoints; serialized
+                // smart regions only carry value.keypointlabels, so mirror it.
+                const result = chosen.map((r: any) => {
+                  const value = { ...r.value };
+                  if (r.type === "keypointlabels" && value.keypointlabels && !value.labels)
+                    value.labels = value.keypointlabels;
+                  return { ...r, value };
+                });
+                console.log("[SAM] regionFinishedDrawing → context", result);
+                if (!result.length) return;
+                const ow = result[0]?.original_width;
+                const oh = result[0]?.original_height;
+                const reqBody = {
+                  tasks: [{ data: task.data }],
+                  label_config: config,
+                  params: { context: { result } },
+                };
+                const promise = originalFetch("/api/ei/predict", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(reqBody),
+                }).then(async (res) => {
+                  const data = await res.json().catch(() => ({}));
+                  console.log("[SAM] /api/ei/predict", res.status, data);
+                  if (!res.ok) {
+                    post("error", "Auto-Annotation failed: " + (data?.error || res.status));
+                    throw new Error(String(res.status));
+                  }
+                  return data;
+                });
+                // Backend bbox/brush results omit original_width/height; add them back
+                // so the suggestions render and map correctly.
+                const transform = (resp: any) =>
+                  (resp?.results?.[0]?.result ?? []).map((r: any) => ({
+                    original_width: ow,
+                    original_height: oh,
+                    image_rotation: 0,
+                    ...r,
+                  }));
+                const load =
+                  store.loadSuggestions?.bind(store) ?? annotation.loadSuggestions?.bind(annotation);
+                if (load) load(promise, transform);
+                else console.warn("[SAM] no loadSuggestions() available on store/annotation");
+              } catch (e: any) {
+                post("error", "Auto-Annotation failed: " + (e?.message ?? String(e)));
+              }
+            });
+          } else {
+            console.warn("[SAM] LabelStudio instance exposes no .on(); interactive ML unwired");
+          }
           injectTheme();
         })
         .catch((e) => {
