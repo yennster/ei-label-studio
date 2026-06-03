@@ -21,9 +21,12 @@ interface LabelStudioProps {
   onSkip?: () => void;
   /** Sample navigation forwarded from inside the iframe ([ and ] keys). */
   onNav?: (dir: number) => void;
+  /** Seed Label Studio's Auto-Annotation toggle + auto-accept (from URL presets). */
+  autoAnnotate?: boolean;
+  autoAccept?: boolean;
 }
 
-export default function LabelStudio({ config, task, onSubmit, onSkip, onNav }: LabelStudioProps) {
+export default function LabelStudio({ config, task, onSubmit, onSkip, onNav, autoAnnotate, autoAccept }: LabelStudioProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const ready = useRef(false);
   const { resolvedTheme } = useTheme();
@@ -32,6 +35,11 @@ export default function LabelStudio({ config, task, onSubmit, onSkip, onNav }: L
 
   const themeRef = useRef(resolvedTheme);
   themeRef.current = resolvedTheme;
+
+  // URL-preset flags for the interactive SAM controls; kept in a ref so the
+  // latest values are sent with every render message.
+  const flagsRef = useRef({ autoAnnotate, autoAccept });
+  flagsRef.current = { autoAnnotate, autoAccept };
 
   // Use a unique session token as a cache-buster so the iframe page reloads
   // fresh on mount but stays constant while hot-reloading samples. Lazy state
@@ -56,7 +64,15 @@ export default function LabelStudio({ config, task, onSubmit, onSkip, onNav }: L
       // already mounted and loading the bundle in the meantime.
       if (!task) return;
       iframeRef.current?.contentWindow?.postMessage(
-        { source: "ls-host", type: "render", config, task, theme: themeRef.current },
+        {
+          source: "ls-host",
+          type: "render",
+          config,
+          task,
+          theme: themeRef.current,
+          autoAnnotate: flagsRef.current.autoAnnotate,
+          autoAccept: flagsRef.current.autoAccept,
+        },
         origin,
       );
     };

@@ -15,9 +15,11 @@ case-insensitive, and anything invalid is silently ignored.
 | `project` | `eiProject` | int ≥ 1 | Project ID to connect to. Not required when `apiKey` is provided (API keys are scoped to a single project). |
 | `category` | | `training` · `testing` · `anomaly` | Which dataset split to load. |
 | `labels` | | comma-separated list | Filter the sample queue to these labels, e.g. `labels=dog,cat`. |
-| `task` | | `classify` · `detect` · `audio` · `timeseries` | Force a labeling template instead of auto-detecting per sample. |
+| `task` | | `classify` · `detect` · `audio` · `timeseries` · `sam` · `transcribe` | Force a labeling template instead of auto-detecting per sample. |
 | `mode` | | `relabel` · `import` | Relabel existing samples, or import-and-label new data. |
 | `autoAdvance` | | bool | Jump to the next unlabeled sample after each submit. Default: `true`. |
+| `autoAnnotate` | | bool | Turn on Auto-Annotation (interactive SAM) so smart-tool clicks request a mask + box. Use with `task=sam`. |
+| `autoAccept` | | bool | Auto-accept SAM suggestions instead of confirming each one. Use with `autoAnnotate`. |
 | `limit` | | int 1–1000 | How many samples to pull into the queue. Default: `200`. |
 | `offset` | | int ≥ 0 | Pagination offset into the dataset. |
 | `theme` | | `dark` · `light` · `unicorn` | Force the colour scheme. |
@@ -44,6 +46,16 @@ https://label.jennyspeelman.dev/?apiKey=ei_abc123&category=training&task=audio&a
 
 Loads the training set with the audio-classification template and auto-advance
 on. You can also add `project=123456` if you want to be explicit.
+
+### Interactive segmentation (SAM), ready to click
+
+```
+https://label.jennyspeelman.dev/?apiKey=ei_abc123&task=sam&autoAnnotate=1&autoAccept=1
+```
+
+Opens the Segment Anything template with Auto-Annotation on and suggestions
+auto-accepted, so a single smart-tool click yields a mask + bounding box (the box
+is what's saved back to Edge Impulse). Requires the hosted SAM backend.
 
 ### Embedding in an iframe
 

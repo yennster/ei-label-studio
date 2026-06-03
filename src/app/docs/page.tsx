@@ -23,6 +23,8 @@ const PARAMS: Param[] = [
   { name: "task", type: "classify | detect | audio | timeseries | sam | transcribe", desc: "Force a labeling template instead of auto-detecting per sample." },
   { name: "mode", type: "relabel | import", desc: "Relabel existing samples, or import-and-label new data." },
   { name: "autoAdvance", type: "bool", desc: "Jump to the next unlabeled sample after each submit." },
+  { name: "autoAnnotate", type: "bool", desc: "Turn on Auto-Annotation (interactive SAM) so smart-tool clicks request a mask + box. Use with task=sam." },
+  { name: "autoAccept", type: "bool", desc: "Auto-accept SAM suggestions instead of confirming each one. Use with autoAnnotate." },
   { name: "limit", type: "int 1–1000", desc: "How many samples to pull into the queue." },
   { name: "offset", type: "int ≥ 0", desc: "Pagination offset into the dataset." },
   { name: "theme", type: "dark | light | unicorn", desc: "Force the colour scheme." },

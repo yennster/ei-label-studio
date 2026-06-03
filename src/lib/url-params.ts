@@ -13,6 +13,10 @@ export interface UrlPreset {
   task?: LabelTask;
   mode?: WorkMode;
   autoAdvance?: boolean;
+  /** Turn on Label Studio's Auto-Annotation (interactive SAM) toggle. */
+  autoAnnotate?: boolean;
+  /** Auto-accept SAM suggestions instead of confirming each one. */
+  autoAccept?: boolean;
   limit?: number;
   offset?: number;
   theme?: "dark" | "light" | "unicorn";
@@ -73,6 +77,12 @@ export function parsePreset(input: URLSearchParams | string): UrlPreset {
 
   const autoAdvance = bool(p.get("autoAdvance"));
   if (autoAdvance !== undefined) preset.autoAdvance = autoAdvance;
+
+  const autoAnnotate = bool(p.get("autoAnnotate"));
+  if (autoAnnotate !== undefined) preset.autoAnnotate = autoAnnotate;
+
+  const autoAccept = bool(p.get("autoAccept"));
+  if (autoAccept !== undefined) preset.autoAccept = autoAccept;
 
   const limit = int(p.get("limit"), 1, 1000);
   if (limit !== undefined) preset.limit = limit;

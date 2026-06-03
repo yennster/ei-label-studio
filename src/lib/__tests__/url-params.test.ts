@@ -98,6 +98,13 @@ describe("parsePreset", () => {
       expect(parsePreset("autoAdvance=maybe").autoAdvance).toBeUndefined();
     });
 
+    it("parses autoAnnotate and autoAccept booleans", () => {
+      expect(parsePreset("autoAnnotate=1").autoAnnotate).toBe(true);
+      expect(parsePreset("autoAccept=true").autoAccept).toBe(true);
+      expect(parsePreset("autoAnnotate=off").autoAnnotate).toBe(false);
+      expect(parsePreset("autoAccept=nope").autoAccept).toBeUndefined();
+    });
+
     it("parses embed independently", () => {
       expect(parsePreset("embed=yes").embed).toBe(true);
     });

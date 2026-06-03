@@ -14,6 +14,8 @@ interface AppState {
   task: LabelTask | null; // null = auto-detect per sample
   mode: WorkMode;
   autoAdvance: boolean;
+  autoAnnotate: boolean;
+  autoAccept: boolean;
   embed: boolean;
   limit: number;
   // data
@@ -43,6 +45,8 @@ export const useApp = create<AppState>((set) => ({
   task: null,
   mode: "relabel",
   autoAdvance: true,
+  autoAnnotate: false,
+  autoAccept: false,
   embed: false,
   limit: 200,
   samples: [],
@@ -59,6 +63,8 @@ export const useApp = create<AppState>((set) => ({
       task: preset.task ?? s.task,
       mode: preset.mode ?? s.mode,
       autoAdvance: preset.autoAdvance ?? s.autoAdvance,
+      autoAnnotate: preset.autoAnnotate ?? s.autoAnnotate,
+      autoAccept: preset.autoAccept ?? s.autoAccept,
       embed: preset.embed ?? s.embed,
       limit: preset.limit ?? s.limit,
     })),

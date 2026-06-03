@@ -80,6 +80,8 @@ export function Workspace() {
     category,
     task: forcedTask,
     autoAdvance,
+    autoAnnotate,
+    autoAccept,
     activeIndex,
     setConnected,
     applyPreset,
@@ -487,6 +489,8 @@ export function Workspace() {
           <LabelStudio
             config={config}
             task={lsTask}
+            autoAnnotate={autoAnnotate}
+            autoAccept={autoAccept}
             onSubmit={handleSubmit}
             onSkip={() => goTo(activeIndex + 1)}
             onNav={(dir) => goTo(activeIndex + dir)}

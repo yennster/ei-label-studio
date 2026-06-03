@@ -121,6 +121,10 @@ body {
   height: 100% !important;
   max-height: 100% !important;
   min-height: 0 !important;
+  /* Let the labeling controls scroll when they overflow (e.g. the SAM template's
+     three mode sections) instead of clipping the last one off-screen. */
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
   /* CLOSE THE GAP BELOW THE LABELS ROW.
      LS ships .lsf-main-view with justify-content: space-between. Because we
      force the main view to fill the iframe (height:100%), a short annotation
@@ -1079,7 +1083,7 @@ export default function LabelerEmbed() {
       /* a real failure is surfaced when render() is actually attempted */
     });
 
-    function render(config: string, task: LSTask) {
+    function render(config: string, task: LSTask, opts?: { autoAnnotate?: boolean; autoAccept?: boolean }) {
       loadLabelStudio()
         .then((LabelStudioCtor) => {
           if (!rootRef.current) return;
@@ -1169,6 +1173,11 @@ export default function LabelerEmbed() {
           } else {
             console.warn("[SAM] LabelStudio instance exposes no .on(); interactive ML unwired");
           }
+
+          // Seed the Auto-Annotation toggle + auto-accept-suggestions from URL presets.
+          if (opts?.autoAnnotate) ls.store?.setAutoAnnotation?.(true);
+          if (opts?.autoAccept) ls.store?.setAutoAcceptSuggestions?.(true);
+
           injectTheme();
         })
         .catch((e) => {
@@ -1186,7 +1195,7 @@ export default function LabelerEmbed() {
       if (d?.source === "ls-host") {
         if (d.type === "render") {
           if (d.theme) setTheme(d.theme);
-          render(d.config, d.task);
+          render(d.config, d.task, { autoAnnotate: d.autoAnnotate, autoAccept: d.autoAccept });
         } else if (d.type === "theme") {
           setTheme(d.theme);
         }
