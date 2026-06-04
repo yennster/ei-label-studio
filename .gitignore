@@ -47,3 +47,10 @@ next-env.d.ts
 # local agent tooling
 .claude/
 .env*.local
+
+# python virtual environments
+.venv*/
+venv*/
+__pycache__/
+*.pyc
+

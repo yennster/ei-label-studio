@@ -4,7 +4,7 @@ import random
 import string
 import xml.etree.ElementTree as ET
 import requests
-from fastapi import FastAPI, Request, HTTPException, Body
+from fastapi import FastAPI, Body, HTTPException
 from beam import Image, asgi
 
 app = FastAPI()
@@ -23,12 +23,40 @@ def get_http_session():
 def get_predictor():
     global predictor
     if predictor is None:
-        print("Loading HQ-SAM (ViT-B) model on GPU...")
-        from segment_anything_hq import sam_model_registry, SamPredictor
-        sam = sam_model_registry["vit_b"](checkpoint="/app/sam_hq_vit_b.pth")
-        sam.to(device="cuda")
-        predictor = SamPredictor(sam)
+        print("Loading SAM 2.1 (Hiera-Tiny) model on GPU...")
+        import torch
+        # Change directory so Hydra can find configs relative to segment-anything-2 package
+        os.chdir("/app/segment-anything-2")
+        from sam2.build_sam import build_sam2
+        from sam2.sam2_image_predictor import SAM2ImagePredictor
+
+        sam2_model = build_sam2(
+            "configs/sam2.1/sam2.1_hiera_t.yaml",
+            "/app/sam2_hiera_tiny.pt",
+            device="cuda"
+        )
+        print("Compiling SAM 2 model using torch.compile...")
+        sam2_model = torch.compile(sam2_model)
+        predictor = SAM2ImagePredictor(sam2_model)
+        
+        # Warm up the compiled model to cache GPU kernels (prevents first-request timeout)
+        print("Warming up compiled SAM 2 model...")
+        import numpy as np
+        dummy_image = np.zeros((100, 100, 3), dtype=np.uint8)
+        with torch.amp.autocast("cuda", dtype=torch.float16):
+            predictor.set_image(dummy_image)
+            predictor.predict(
+                point_coords=np.array([[50, 50]]),
+                point_labels=np.array([1]),
+                multimask_output=False,
+            )
+        print("SAM 2 initialization and warm-up complete!")
     return predictor
+
+@app.on_event("startup")
+def startup_event():
+    # Load, compile, and warm up the predictor when the container starts
+    get_predictor()
 
 def parse_label_config(xml_string):
     config = {
@@ -72,16 +100,23 @@ def optimized_mask2rle(mask):
     n = len(arr)
     if n == 0:
         return []
+    
+    # 1. y detects changes in value
     y = arr[1:] != arr[:-1]
+    # 2. find change indices
     i = np.append(np.where(y), n - 1)
+    # 3. calculate lengths and multiply by 4 (to account for the 4 repeated channels)
     lengths = np.diff(np.append(-1, i)) * 4
     values = arr[i]
+    
+    # 4. Construct the RLE bitstream header
     num = 4 * n
     numbits = f'{num:032b}'
     wordsizebits = '00111'
     rle_bits = '0010001101111111'
     base_str = numbits + wordsizebits + rle_bits
     
+    # 5. Convert runs to bit string
     out_str_list = []
     for length_reeks, value in zip(lengths, values):
         if length_reeks == 1:
@@ -184,12 +219,13 @@ def predict(payload: dict = Body(...)):
 
             masks, scores, logits = pred.predict(
                 box=np.array([x, y, x+w, y+h]),
-                point_labels=np.array([1]),
                 multimask_output=False,
             )
         else:
             raise HTTPException(status_code=400, detail=f"Unsupported prompt type: {prompt_type}")
 
+        if hasattr(masks, "cpu"):
+            masks = masks.cpu().numpy()
         mask = masks[0].astype(np.uint8)
 
     contours, hierarchy = cv2.findContours(
@@ -241,11 +277,13 @@ def predict(payload: dict = Body(...)):
     memory="16Gi",
     gpu="A10G",
     keep_warm_seconds=1200,
-    image=Image(python_version="python3.9")
+    image=Image(python_version="python3.10")
     .add_commands([
-        "apt-get update && apt-get install -y git wget libgl1 libglib2.0-0",
+        "apt-get update && apt-get install -y git wget curl libgl1 libglib2.0-0",
         "mkdir -p /app",
-        "wget -q -O /app/sam_hq_vit_b.pth https://huggingface.co/lkeab/hq-sam/resolve/main/sam_hq_vit_b.pth"
+        "git clone https://github.com/facebookresearch/sam2.git /app/segment-anything-2",
+        "cd /app/segment-anything-2 && export SAM2_BUILD_CUDA=0 && pip install -e .",
+        "curl -L -o /app/sam2_hiera_tiny.pt https://huggingface.co/facebook/sam2.1-hiera-tiny/resolve/main/sam2.1_hiera_tiny.pt"
     ])
     .add_python_packages([
         "fastapi",
@@ -254,11 +292,11 @@ def predict(payload: dict = Body(...)):
         "opencv-python-headless",
         "torch",
         "torchvision",
-        "timm==0.4.12",
         "label-studio-converter",
         "boto3",
         "requests",
-        "segment-anything-hq"
+        "hydra-core",
+        "omegaconf"
     ])
 )
 def run_app():

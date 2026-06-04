@@ -17,7 +17,7 @@ back to Edge Impulse — all driven by shareable URLs.
 - **Round-trips to EI** — samples are pulled via the Studio API; the current label is shown as a
   pre-annotation; submitting relabels the sample back in Edge Impulse.
 - **Interactive segmentation (SAM)** — a Segment Anything template enables Point2Label /
-  Bbox2Label: click or drag and a hosted MobileSAM backend returns a mask + bounding box. The
+  Bbox2Label: click or drag and a hosted SAM 2.1 backend on Beam Cloud returns a mask + bounding box. The
   mask stays in the canvas; the bounding box is pushed back to Edge Impulse. See [`ml-backend/`](ml-backend/).
 - **URL-driven** — deep-link presets (project, category, template, filters, theme, embed…) in the
   spirit of [synthetic-data-studio](https://github.com/yennster/synthetic-data-studio/blob/main/docs/url-parameters.md).
@@ -42,24 +42,20 @@ Label Studio server. Its bundle is vendored under `public/vendor/label-studio`.
 
 ## Interactive segmentation (SAM)
 
-The **Image · Segment Anything (SAM)** template adds OpenMMLab
-[`label_anything`](https://github.com/open-mmlab/playground/tree/main/label_anything)-style
-Point2Label / Bbox2Label. The PyTorch + SAM stack can't run on Vercel (no containers; functions
-cap at 500 MB), so the model is hosted separately and called server-side:
+The **Image · Segment Anything (SAM)** template adds SAM-style Point2Label / Bbox2Label. The PyTorch + SAM stack can't run on Vercel (no containers; functions cap at 500 MB), so the model is hosted separately and called server-side:
 
 ```
-Canvas (smart tool) --> POST /api/ei/predict --> SAM backend (Hugging Face Space)
+Canvas (smart tool) --> POST /api/ei/predict --> SAM backend (Beam Cloud GPU)
                               |  fetch image from EI, hand backend a temporary Blob URL
                               \- returns mask + bbox; the box is saved to EI on submit
 ```
 
 Setup:
 
-1. **Deploy the backend** — a Hugging Face Docker Space; see [`ml-backend/`](ml-backend/).
+1. **Deploy the backend** — a GPU-enabled Beam Cloud deployment; see [`ml-backend/`](ml-backend/).
 2. **Link a Vercel Blob store** to the project (Storage tab) — this sets `BLOB_READ_WRITE_TOKEN`,
    used to give the backend a temporary public URL for each image.
-3. **Set `SAM_BACKEND_URL`** to the Space's `/predict` URL (and optionally `SAM_BACKEND_AUTH` for
-   a private Space). See [`.env.example`](.env.example).
+3. **Set `SAM_BACKEND_URL`** to the Beam deployment's `/predict` URL and `SAM_BACKEND_AUTH` to the Bearer Token. See [`.env.example`](.env.example).
 
 ## Local development
 

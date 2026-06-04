@@ -5,16 +5,12 @@ import fs from "fs/promises";
 import path from "path";
 
 export const runtime = "nodejs";
-// A cold (sleeping) Hugging Face Space can take ~1 min to wake + load the model on
-// the first click; give the proxy room before the platform kills the function.
+// A cold (sleeping) Beam container can take some time to wake up.
+// Give the proxy room before Vercel kills the function.
 export const maxDuration = 300;
 
-// The label-studio-ml backend only loads the model after /setup is called (the full
-// Label Studio server does this on "Connect Model"; we have no such server). After a
-// cold start it answers /predict with "Model is not loaded", so we lazily call /setup
-// and retry. Model loading is label-agnostic (it's mobile_sam), so a minimal config
-// with the tag names the backend expects is enough — the real labels come from the
-// per-request context.
+// The backend compiles and warms up the SAM 2.1 model during container startup.
+// We keep the lazy /setup fallback in case of backend restarts or edge failures.
 const SAM_SETUP_CONFIG =
   '<View><Image name="image" value="$image"/>' +
   '<KeyPointLabels name="KeyPointLabels" toName="image" smart="true"><Label value="x"/></KeyPointLabels>' +
