@@ -1384,12 +1384,7 @@ export default function LabelerEmbed() {
 
       // Auto-select the Smart Tool if auto-annotate is enabled and the tool is not active
       if (autoAnnotateEnabled) {
-        const buttons = Array.from(document.querySelectorAll(".lsf-tool"));
-        const smartBtn = buttons.find((b) => {
-          const label = b.getAttribute("aria-label") || b.getAttribute("title") || "";
-          return /smart/i.test(label);
-        }) as HTMLElement | undefined;
-
+        const smartBtn = document.querySelector(".lsf-tool_smart") as HTMLElement | null;
         if (smartBtn && !smartBtn.classList.contains("lsf-tool_active")) {
           console.log("[SAM] Auto-selecting Smart Tool");
           smartBtn.click();
