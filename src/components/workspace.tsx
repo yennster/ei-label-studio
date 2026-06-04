@@ -545,12 +545,22 @@ export function Workspace() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="auto">Auto-detect per sample</SelectItem>
-              <SelectItem value="classify">Image · classify</SelectItem>
-              <SelectItem value="detect">Image · detect (boxes)</SelectItem>
-              <SelectItem value="sam">Image · Segment Anything (SAM)</SelectItem>
-              <SelectItem value="audio">Audio · classify</SelectItem>
-              <SelectItem value="transcribe">Audio · transcribe</SelectItem>
-              <SelectItem value="timeseries">Time-series</SelectItem>
+              {(!projectModality || projectModality === "image" || projectModality === "video") && (
+                <>
+                  <SelectItem value="classify">Image · classify</SelectItem>
+                  <SelectItem value="detect">Image · detect (boxes)</SelectItem>
+                  <SelectItem value="sam">Image · Segment Anything (SAM)</SelectItem>
+                </>
+              )}
+              {(!projectModality || projectModality === "audio") && (
+                <>
+                  <SelectItem value="audio">Audio · classify</SelectItem>
+                  <SelectItem value="transcribe">Audio · transcribe</SelectItem>
+                </>
+              )}
+              {(!projectModality || projectModality === "timeseries") && (
+                <SelectItem value="timeseries">Time-series</SelectItem>
+              )}
             </SelectContent>
           </Select>
         </div>

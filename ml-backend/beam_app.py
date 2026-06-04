@@ -7,9 +7,6 @@ import requests
 from fastapi import FastAPI, Request, HTTPException
 from beam import Image, asgi
 
-# Add the cloned playground/label_anything/sam path so that imports like models.mobile_sam work
-sys.path.append("/app/label_anything/sam")
-
 app = FastAPI()
 
 # Global variable to cache the loaded model
@@ -18,10 +15,10 @@ predictor = None
 def get_predictor():
     global predictor
     if predictor is None:
-        print("Loading MobileSAM model...")
-        from models.mobile_sam import SamPredictor, sam_model_registry
-        sam = sam_model_registry["vit_t"](checkpoint="/app/label_anything/mobile_sam.pt")
-        sam.to(device="cpu")
+        print("Loading HQ-SAM (ViT-B) model on GPU...")
+        from segment_anything_hq import sam_model_registry, SamPredictor
+        sam = sam_model_registry["vit_b"](checkpoint="/app/sam_hq_vit_b.pth")
+        sam.to(device="cuda")
         predictor = SamPredictor(sam)
     return predictor
 
@@ -187,15 +184,13 @@ async def predict(request: Request):
 @asgi(
     name="sam-backend",
     cpu=2,
-    memory="8Gi",
+    memory="16Gi",
+    gpu="A10G",
     image=Image(python_version="python3.9")
     .add_commands([
         "apt-get update && apt-get install -y git wget libgl1 libglib2.0-0",
-        "git clone https://github.com/open-mmlab/playground.git /tmp/playground",
         "mkdir -p /app",
-        "cp -r /tmp/playground/label_anything /app/label_anything",
-        "rm -rf /tmp/playground",
-        "wget -q -O /app/label_anything/mobile_sam.pt https://raw.githubusercontent.com/ChaoningZhang/MobileSAM/master/weights/mobile_sam.pt"
+        "wget -q -O /app/sam_hq_vit_b.pth https://huggingface.co/lkeab/hq-sam/resolve/main/sam_hq_vit_b.pth"
     ])
     .add_python_packages([
         "fastapi",
@@ -207,7 +202,8 @@ async def predict(request: Request):
         "timm==0.4.12",
         "label-studio-converter",
         "boto3",
-        "requests"
+        "requests",
+        "segment-anything-hq"
     ])
 )
 def run_app():
