@@ -48,7 +48,7 @@ import { parsePreset } from "@/lib/url-params";
 import { detectModality } from "@/lib/modality";
 import { defaultTaskFor, projectTypeLabel } from "@/lib/project-type";
 import { buildLabelConfig, channelsForSample } from "@/lib/ls-config";
-import { sampleToTask, labelFromAnnotation, boxesFromAnnotation } from "@/lib/mapping";
+import { sampleToTask, labelFromAnnotation, boxesFromAnnotation, mediaUrl } from "@/lib/mapping";
 import type { EICategory, LabelTask } from "@/lib/types";
 
 const LabelStudio = dynamic(() => import("@/components/label-studio"), {
@@ -104,6 +104,8 @@ export function Workspace() {
   const [newLabel, setNewLabel] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [resizing, setResizing] = useState(false);
+  const [resolvedDims, setResolvedDims] = useState<{ width: number; height: number } | null>(null);
+  const [dimsLoading, setDimsLoading] = useState(false);
   const inspectorRef = useRef<ImperativePanelHandle>(null);
   const didAutoCollapse = useRef(false);
   const [inspectorCollapsed, setInspectorCollapsed] = useState(false);
@@ -255,10 +257,42 @@ export function Workspace() {
     [effectiveTask, labelSet, active],
   );
 
-  const lsTask = useMemo(
-    () => (active && project ? sampleToTask(active, project.id, effectiveTask) : null),
-    [active, project, effectiveTask],
-  );
+  // Load the active image in the background to resolve natural dimensions (respecting browser auto-rotation of EXIF metadata)
+  useEffect(() => {
+    if (!active || !project?.id || (effectiveTask !== "detect" && effectiveTask !== "sam")) {
+      setResolvedDims(null);
+      setDimsLoading(false);
+      return;
+    }
+
+    setDimsLoading(true);
+    const activeId = active.id;
+    const img = new window.Image();
+    
+    img.onload = () => {
+      if (active.id === activeId) {
+        setResolvedDims({ width: img.naturalWidth, height: img.naturalHeight });
+        setDimsLoading(false);
+      }
+    };
+    
+    img.onerror = () => {
+      if (active.id === activeId) {
+        setResolvedDims(active.imageDimensions || null);
+        setDimsLoading(false);
+      }
+    };
+    
+    img.src = mediaUrl(project.id, active.id, "image");
+  }, [active, project?.id, effectiveTask]);
+
+  const lsTask = useMemo(() => {
+    if (!active || !project) return null;
+    const sampleCopy = resolvedDims
+      ? { ...active, imageDimensions: resolvedDims }
+      : active;
+    return sampleToTask(sampleCopy, project.id, effectiveTask);
+  }, [active, project, effectiveTask, resolvedDims]);
 
   const goTo = useCallback(
     (i: number) => {
@@ -280,7 +314,8 @@ export function Workspace() {
       try {
         if (effectiveTask === "detect" || effectiveTask === "sam") {
           // Object detection: push the (edited) boxes back to EI as pixels.
-          const boxes = boxesFromAnnotation(annotation, active.imageDimensions);
+          const dims = resolvedDims || active.imageDimensions;
+          const boxes = boxesFromAnnotation(annotation, dims);
           await setBoundingBoxes(active.id, boxes);
 
           const boxLabels = Array.from(new Set(boxes.map((b) => b.label)))
@@ -332,7 +367,7 @@ export function Workspace() {
         setSubmitting(false);
       }
     },
-    [active, effectiveTask, advance, markLabeled],
+    [active, effectiveTask, resolvedDims, advance, markLabeled],
   );
 
   // Embed mode hides the surrounding chrome for iframe use.
@@ -496,9 +531,9 @@ export function Workspace() {
             onSkip={() => goTo(activeIndex + 1)}
             onNav={(dir) => goTo(activeIndex + dir)}
           />
-          {!lsTask && (
+          {(!lsTask || dimsLoading) && (
             <div className="absolute inset-0 flex items-center justify-center gap-2 bg-background text-muted-foreground">
-              {loading ? (
+              {loading || dimsLoading ? (
                 <>
                   <Loader2 className="size-4 animate-spin" /> Loading canvas…
                 </>

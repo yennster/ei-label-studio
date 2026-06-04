@@ -131,8 +131,8 @@ export function boxesFromAnnotation(
   const boxes: EIBoundingBox[] = [];
   for (const r of a.result) {
     if (r.type !== "rectanglelabels" || !r.value) continue;
-    const ow = dims?.width || (r.original_width ?? 0);
-    const oh = dims?.height || (r.original_height ?? 0);
+    const ow = r.original_width ?? dims?.width ?? 0;
+    const oh = r.original_height ?? dims?.height ?? 0;
     if (!ow || !oh) continue;
     const label = r.value.rectanglelabels?.[0] ?? r.value.labels?.[0];
     if (!label) continue;

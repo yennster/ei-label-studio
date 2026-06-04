@@ -73,7 +73,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: false, error: "Not connected" }, { status: 401 });
   }
 
-  let body: { tasks?: { data?: { image?: string } }[] };
+  let body: { tasks?: { data?: { image?: string } }[]; action?: string };
   try {
     body = await req.json();
   } catch {
@@ -140,18 +140,21 @@ export async function POST(req: Request) {
   // Hand the backend a URL it can fetch, then forward the original prompt body.
   if (task.data) task.data.image = staged.url;
 
+  const isWarmup = body.action === "warmup";
   const mlBackendUrl = process.env.SAM_BACKEND_URL || "http://localhost:8003/predict";
+  const targetUrl = isWarmup ? mlBackendUrl.replace(/\/predict\/?$/, "/warmup") : mlBackendUrl;
+
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     "Connection": "keep-alive"
   };
   if (process.env.SAM_BACKEND_AUTH) headers["Authorization"] = process.env.SAM_BACKEND_AUTH;
 
-  const callPredict = () =>
-    fetch(mlBackendUrl, { method: "POST", headers, body: JSON.stringify(body) });
+  const callBackend = () =>
+    fetch(targetUrl, { method: "POST", headers, body: JSON.stringify(body) });
 
   try {
-    let mlResponse = await callPredict();
+    let mlResponse = await callBackend();
 
     // Cold-start recovery: load the model via /setup, then retry once.
     if (!mlResponse.ok) {
@@ -163,7 +166,7 @@ export async function POST(req: Request) {
           headers,
           body: JSON.stringify({ project: "0", schema: SAM_SETUP_CONFIG }),
         }).catch(() => {});
-        mlResponse = await callPredict();
+        mlResponse = await callBackend();
         if (!mlResponse.ok) errorText = await mlResponse.text();
       }
       if (!mlResponse.ok) {

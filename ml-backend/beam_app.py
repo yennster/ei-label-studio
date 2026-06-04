@@ -145,6 +145,39 @@ def optimized_mask2rle(mask):
 def setup():
     return {"status": "setup"}
 
+@app.post("/warmup")
+def warmup(payload: dict = Body(...)):
+    import torch
+    
+    tasks = payload.get("tasks", [])
+    if not tasks:
+        get_predictor()
+        return {"status": "container_warmed"}
+
+    task = tasks[0]
+    image_url = task.get("data", {}).get("image")
+    if not image_url:
+        get_predictor()
+        return {"status": "container_warmed"}
+
+    global cached_image_url
+    pred = get_predictor()
+
+    with torch.amp.autocast("cuda", dtype=torch.float16):
+        if image_url != cached_image_url:
+            try:
+                print(f"Pre-embedding image in background: {image_url}")
+                image = download_image(image_url)
+                pred.set_image(image)
+                cached_image_url = image_url
+            except Exception as e:
+                print(f"Failed to pre-embed image: {e}")
+                return {"status": "error", "detail": str(e)}
+        else:
+            print(f"Image already embedded: {image_url}")
+
+    return {"status": "warmed", "cached_image_url": cached_image_url}
+
 @app.post("/predict")
 def predict(payload: dict = Body(...)):
     import numpy as np
@@ -269,12 +302,15 @@ def predict(payload: dict = Body(...)):
 
     return {"results": [{"result": results}]}
 
+# Configure keep_warm_seconds from the environment, default to 1 hour (3600 seconds)
+keep_warm_val = int(os.environ.get("KEEP_WARM_SECONDS", "3600"))
+
 @asgi(
     name="sam-backend",
     cpu=2,
     memory="16Gi",
     gpu="A10G",
-    keep_warm_seconds=1200,
+    keep_warm_seconds=keep_warm_val,
     image=Image(python_version="python3.10")
     .add_commands([
         "apt-get update && apt-get install -y git wget curl libgl1 libglib2.0-0",

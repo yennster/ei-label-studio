@@ -1170,6 +1170,25 @@ export default function LabelerEmbed() {
     });
 
     function render(config: string, task: LSTask, opts?: { autoAnnotate?: boolean; autoAccept?: boolean }) {
+      if (task?.data?.image) {
+        const warmupBody = {
+          action: "warmup",
+          tasks: [{ data: task.data }],
+          label_config: config,
+        };
+        console.log("[SAM] Triggering background warmup/pre-embedding for image:", task.data.image);
+        originalFetch("/api/ei/predict", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(warmupBody),
+        }).then(async (res) => {
+          const data = await res.json().catch(() => ({}));
+          console.log("[SAM] Background warmup response:", res.status, data);
+        }).catch((err) => {
+          console.error("[SAM] Background warmup failed to fetch:", err);
+        });
+      }
+
       loadLabelStudio()
         .then((LabelStudioCtor) => {
           if (!rootRef.current) return;
