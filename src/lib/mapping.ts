@@ -108,7 +108,10 @@ export function sampleToTask(
  * Convert a submitted Label Studio rectangle annotation back into EI bounding
  * boxes (absolute pixels), using each result's original_width/height.
  */
-export function boxesFromAnnotation(annotation: unknown): EIBoundingBox[] {
+export function boxesFromAnnotation(
+  annotation: unknown,
+  dims?: { width: number; height: number },
+): EIBoundingBox[] {
   const a = annotation as {
     result?: Array<{
       type?: string;
@@ -128,8 +131,8 @@ export function boxesFromAnnotation(annotation: unknown): EIBoundingBox[] {
   const boxes: EIBoundingBox[] = [];
   for (const r of a.result) {
     if (r.type !== "rectanglelabels" || !r.value) continue;
-    const ow = r.original_width ?? 0;
-    const oh = r.original_height ?? 0;
+    const ow = dims?.width || (r.original_width ?? 0);
+    const oh = dims?.height || (r.original_height ?? 0);
     if (!ow || !oh) continue;
     const label = r.value.rectanglelabels?.[0] ?? r.value.labels?.[0];
     if (!label) continue;

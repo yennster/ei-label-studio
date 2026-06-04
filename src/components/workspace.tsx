@@ -280,7 +280,7 @@ export function Workspace() {
       try {
         if (effectiveTask === "detect" || effectiveTask === "sam") {
           // Object detection: push the (edited) boxes back to EI as pixels.
-          const boxes = boxesFromAnnotation(annotation);
+          const boxes = boxesFromAnnotation(annotation, active.imageDimensions);
           await setBoundingBoxes(active.id, boxes);
 
           const boxLabels = Array.from(new Set(boxes.map((b) => b.label)))

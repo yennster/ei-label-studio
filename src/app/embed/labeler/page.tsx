@@ -1381,6 +1381,20 @@ export default function LabelerEmbed() {
       if (cb && storeVal !== undefined && cb.checked !== storeVal) {
         cb.checked = storeVal;
       }
+
+      // Auto-select the Smart Tool if auto-annotate is enabled and the tool is not active
+      if (autoAnnotateEnabled) {
+        const buttons = Array.from(document.querySelectorAll(".lsf-tool"));
+        const smartBtn = buttons.find((b) => {
+          const label = b.getAttribute("aria-label") || b.getAttribute("title") || "";
+          return /smart/i.test(label);
+        }) as HTMLElement | undefined;
+
+        if (smartBtn && !smartBtn.classList.contains("lsf-tool_active")) {
+          console.log("[SAM] Auto-selecting Smart Tool");
+          smartBtn.click();
+        }
+      }
     }, 200);
 
 
