@@ -1284,8 +1284,27 @@ export default function LabelerEmbed() {
           }
 
           // Seed the Auto-Annotation toggle + auto-accept-suggestions from URL presets.
-          if (opts?.autoAnnotate) ls.store?.setAutoAnnotation?.(true);
-          if (opts?.autoAccept) ls.store?.setAutoAcceptSuggestions?.(true);
+          let seedRetries = 0;
+          const seedFlags = () => {
+            const currentLs = instanceRef.current as any;
+            const store = currentLs?.store;
+            if (store) {
+              console.log("[SAM] store found, seeding flags...", {
+                autoAnnotate: opts?.autoAnnotate,
+                autoAccept: opts?.autoAccept,
+              });
+              if (opts?.autoAnnotate && typeof store.setAutoAnnotation === "function") {
+                store.setAutoAnnotation(true);
+              }
+              if (opts?.autoAccept && typeof store.setAutoAcceptSuggestions === "function") {
+                store.setAutoAcceptSuggestions(true);
+              }
+            } else if (seedRetries < 50) {
+              seedRetries++;
+              setTimeout(seedFlags, 30);
+            }
+          };
+          seedFlags();
 
           injectTheme();
         })
