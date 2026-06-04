@@ -45,6 +45,6 @@ export function projectTypeLabel(project: EIProject | null, modality?: Modality)
 
 /** Default labeling template, factoring in the project's labeling method. */
 export function defaultTaskFor(modality: Modality, labelingMethod?: string): LabelTask {
-  if (modality === "image" && labelingMethod === "object_detection") return "detect";
+  if (modality === "image" && labelingMethod === "object_detection") return "sam";
   return defaultTaskForModality(modality);
 }

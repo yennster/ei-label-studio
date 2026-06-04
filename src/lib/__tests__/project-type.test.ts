@@ -52,8 +52,8 @@ describe("projectTypeLabel", () => {
 });
 
 describe("defaultTaskFor", () => {
-  it("returns detect for an image object-detection project", () => {
-    expect(defaultTaskFor("image", "object_detection")).toBe("detect");
+  it("returns sam for an image object-detection project", () => {
+    expect(defaultTaskFor("image", "object_detection")).toBe("sam");
   });
 
   it("returns classify for an image classification project", () => {
