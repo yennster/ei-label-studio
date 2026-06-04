@@ -17,9 +17,9 @@ case-insensitive, and anything invalid is silently ignored.
 | `labels` | | comma-separated list | Filter the sample queue to these labels, e.g. `labels=dog,cat`. |
 | `task` | | `classify` · `detect` · `audio` · `timeseries` · `sam` · `transcribe` | Force a labeling template instead of auto-detecting per sample. |
 | `mode` | | `relabel` · `import` | Relabel existing samples, or import-and-label new data. |
-| `autoAdvance` | | bool | Jump to the next unlabeled sample after each submit. Default: `true`. |
-| `autoAnnotate` | | bool | Turn on Auto-Annotation (interactive SAM) so smart-tool clicks request a mask + box. Use with `task=sam`. |
-| `autoAccept` | | bool | Auto-accept SAM suggestions instead of confirming each one. Use with `autoAnnotate`. |
+| `autoAdvance` | | bool | Jump to the next unlabeled sample after each submit. Default: `false`. |
+| `autoAnnotate` | | bool | Turn on Auto-Annotation (interactive SAM) so smart-tool clicks request a mask + box. Use with `task=sam`. Default: `true`. |
+| `autoAccept` | | bool | Auto-accept SAM suggestions instead of confirming each one. Use with `autoAnnotate`. Default: `true`. |
 | `limit` | | int 1–1000 | How many samples to pull into the queue. Default: `200`. |
 | `offset` | | int ≥ 0 | Pagination offset into the dataset. |
 | `theme` | | `dark` · `light` · `unicorn` | Force the colour scheme. |

@@ -280,6 +280,7 @@ def predict(payload: dict = Body(...)):
     image=Image(python_version="python3.10")
     .add_commands([
         "apt-get update && apt-get install -y git wget curl libgl1 libglib2.0-0",
+        "pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118",
         "mkdir -p /app",
         "git clone https://github.com/facebookresearch/sam2.git /app/segment-anything-2",
         "cd /app/segment-anything-2 && export SAM2_BUILD_CUDA=0 && pip install -e .",
@@ -290,8 +291,6 @@ def predict(payload: dict = Body(...)):
         "uvicorn",
         "numpy<2",
         "opencv-python-headless",
-        "torch",
-        "torchvision",
         "label-studio-converter",
         "boto3",
         "requests",
@@ -301,3 +300,4 @@ def predict(payload: dict = Body(...)):
 )
 def run_app():
     return app
+
