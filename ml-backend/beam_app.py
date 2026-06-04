@@ -35,12 +35,10 @@ def get_predictor():
             "/app/sam2_hiera_tiny.pt",
             device="cuda"
         )
-        print("Compiling SAM 2 model using torch.compile...")
-        sam2_model = torch.compile(sam2_model)
         predictor = SAM2ImagePredictor(sam2_model)
         
-        # Warm up the compiled model to cache GPU kernels (prevents first-request timeout)
-        print("Warming up compiled SAM 2 model...")
+        # Warm up the model to cache GPU kernels (prevents first-request timeout)
+        print("Warming up SAM 2 model...")
         import numpy as np
         dummy_image = np.zeros((100, 100, 3), dtype=np.uint8)
         with torch.amp.autocast("cuda", dtype=torch.float16):
