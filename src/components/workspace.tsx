@@ -539,18 +539,25 @@ export function Workspace() {
 
         <div className="space-y-2">
           <span className="text-xs font-medium text-muted-foreground">Labeling template</span>
-          <Select value={forcedTask ?? "auto"} onValueChange={(v) => setTask(v === "auto" ? null : (v as LabelTask))}>
+          <Select value={forcedTask ?? effectiveTask} onValueChange={(v) => setTask(v as LabelTask)}>
             <SelectTrigger className="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="auto">Auto-detect per sample</SelectItem>
               {(!projectModality || projectModality === "image" || projectModality === "video") && (
-                <>
-                  <SelectItem value="classify">Image · classify</SelectItem>
-                  <SelectItem value="detect">Image · detect (boxes)</SelectItem>
-                  <SelectItem value="sam">Image · Segment Anything (SAM)</SelectItem>
-                </>
+                project?.labelingMethod === "object_detection" ? (
+                  <>
+                    <SelectItem value="sam">Image · Segment Anything (SAM)</SelectItem>
+                    <SelectItem value="detect">Image · detect (boxes)</SelectItem>
+                    <SelectItem value="classify">Image · classify</SelectItem>
+                  </>
+                ) : (
+                  <>
+                    <SelectItem value="classify">Image · classify</SelectItem>
+                    <SelectItem value="detect">Image · detect (boxes)</SelectItem>
+                    <SelectItem value="sam">Image · Segment Anything (SAM)</SelectItem>
+                  </>
+                )
               )}
               {(!projectModality || projectModality === "audio") && (
                 <>
