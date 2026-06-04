@@ -4,13 +4,21 @@ import random
 import string
 import xml.etree.ElementTree as ET
 import requests
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, Body
 from beam import Image, asgi
 
 app = FastAPI()
 
-# Global variable to cache the loaded model
+# Global variables to cache loaded model and active image embedding
 predictor = None
+cached_image_url = None
+http_session = None
+
+def get_http_session():
+    global http_session
+    if http_session is None:
+        http_session = requests.Session()
+    return http_session
 
 def get_predictor():
     global predictor
@@ -48,7 +56,8 @@ def random_id():
 def download_image(url):
     import numpy as np
     import cv2
-    resp = requests.get(url, timeout=30)
+    session = get_http_session()
+    resp = session.get(url, timeout=30)
     resp.raise_for_status()
     arr = np.asarray(bytearray(resp.content), dtype=np.uint8)
     image = cv2.imdecode(arr, cv2.IMREAD_COLOR)
@@ -57,19 +66,58 @@ def download_image(url):
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     return image
 
+def optimized_mask2rle(mask):
+    import numpy as np
+    arr = mask.ravel()
+    n = len(arr)
+    if n == 0:
+        return []
+    y = arr[1:] != arr[:-1]
+    i = np.append(np.where(y), n - 1)
+    lengths = np.diff(np.append(-1, i)) * 4
+    values = arr[i]
+    num = 4 * n
+    numbits = f'{num:032b}'
+    wordsizebits = '00111'
+    rle_bits = '0010001101111111'
+    base_str = numbits + wordsizebits + rle_bits
+    
+    out_str_list = []
+    for length_reeks, value in zip(lengths, values):
+        if length_reeks == 1:
+            out_str_list.append(f'000000{value:08b}')
+        elif length_reeks > 1:
+            if length_reeks <= 8:
+                out_str_list.append(f'100{length_reeks - 1:03b}{value:08b}')
+            elif length_reeks <= 16:
+                out_str_list.append(f'101{length_reeks - 1:04b}{value:08b}')
+            elif length_reeks <= 256:
+                out_str_list.append(f'110{length_reeks - 1:08b}{value:08b}')
+            else:
+                length_temp = length_reeks
+                while length_temp > 65536:
+                    out_str_list.append(f'111{65535:016b}{value:08b}')
+                    length_temp -= 65536
+                out_str_list.append(f'111{length_temp - 1:016b}{value:08b}')
+                
+    out_str = ''.join(out_str_list)
+    total_str = base_str + out_str
+    nzfill = 8 - len(total_str) % 8
+    total_str = total_str + nzfill * '0'
+    
+    rle = [int(total_str[j : j + 8], 2) for j in range(0, len(total_str), 8)]
+    return rle
+
 @app.post("/setup")
-async def setup(request: Request):
+def setup():
     return {"status": "setup"}
 
 @app.post("/predict")
-async def predict(request: Request):
+def predict(payload: dict = Body(...)):
     import numpy as np
     import cv2
-    try:
-        payload = await request.json()
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid JSON body")
-
+    import torch
+    
     tasks = payload.get("tasks", [])
     if not tasks:
         raise HTTPException(status_code=400, detail="No tasks provided")
@@ -100,42 +148,49 @@ async def predict(request: Request):
     if not original_height or not original_width:
         raise HTTPException(status_code=400, detail="Missing original_height or original_width in prompt")
 
-    try:
-        image = download_image(image_url)
-    except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Failed to fetch image: {str(e)}")
-
+    global cached_image_url
     pred = get_predictor()
-    pred.set_image(image)
 
-    if prompt_type == 'keypointlabels':
-        x = value.get('x') * original_width / 100.0
-        y = value.get('y') * original_height / 100.0
-        labels = value.get('labels', ['x'])
-        output_label = labels[0] if labels else 'x'
+    with torch.amp.autocast("cuda", dtype=torch.float16):
+        if image_url != cached_image_url:
+            try:
+                print(f"Embedding cache miss. Downloading new image: {image_url}")
+                image = download_image(image_url)
+                pred.set_image(image)
+                cached_image_url = image_url
+            except Exception as e:
+                raise HTTPException(status_code=502, detail=f"Failed to fetch image: {str(e)}")
+        else:
+            print(f"Embedding cache hit for: {image_url}")
 
-        masks, scores, logits = pred.predict(
-            point_coords=np.array([[x, y]]),
-            point_labels=np.array([1]),
-            multimask_output=False,
-        )
-    elif prompt_type == 'rectanglelabels':
-        x = value.get('x') * original_width / 100.0
-        y = value.get('y') * original_height / 100.0
-        w = value.get('width') * original_width / 100.0
-        h = value.get('height') * original_height / 100.0
-        rectangle_labels = value.get('rectanglelabels', ['x'])
-        output_label = rectangle_labels[0] if rectangle_labels else 'x'
+        if prompt_type == 'keypointlabels':
+            x = value.get('x') * original_width / 100.0
+            y = value.get('y') * original_height / 100.0
+            labels = value.get('labels', ['x'])
+            output_label = labels[0] if labels else 'x'
 
-        masks, scores, logits = pred.predict(
-            box=np.array([x, y, x+w, y+h]),
-            point_labels=np.array([1]),
-            multimask_output=False,
-        )
-    else:
-        raise HTTPException(status_code=400, detail=f"Unsupported prompt type: {prompt_type}")
+            masks, scores, logits = pred.predict(
+                point_coords=np.array([[x, y]]),
+                point_labels=np.array([1]),
+                multimask_output=False,
+            )
+        elif prompt_type == 'rectanglelabels':
+            x = value.get('x') * original_width / 100.0
+            y = value.get('y') * original_height / 100.0
+            w = value.get('width') * original_width / 100.0
+            h = value.get('height') * original_height / 100.0
+            rectangle_labels = value.get('rectanglelabels', ['x'])
+            output_label = rectangle_labels[0] if rectangle_labels else 'x'
 
-    mask = masks[0].astype(np.uint8)
+            masks, scores, logits = pred.predict(
+                box=np.array([x, y, x+w, y+h]),
+                point_labels=np.array([1]),
+                multimask_output=False,
+            )
+        else:
+            raise HTTPException(status_code=400, detail=f"Unsupported prompt type: {prompt_type}")
+
+        mask = masks[0].astype(np.uint8)
 
     contours, hierarchy = cv2.findContours(
         mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
@@ -163,9 +218,8 @@ async def predict(request: Request):
             "id": random_id(),
         })
 
-    from label_studio_converter import brush
     mask_255 = mask * 255
-    rle = brush.mask2rle(mask_255)
+    rle = optimized_mask2rle(mask_255)
     results.append({
         "from_name": config_parsed['BrushLabels']['from_name'],
         "to_name": config_parsed['BrushLabels']['to_name'],
@@ -186,6 +240,7 @@ async def predict(request: Request):
     cpu=2,
     memory="16Gi",
     gpu="A10G",
+    keep_warm_seconds=1200,
     image=Image(python_version="python3.9")
     .add_commands([
         "apt-get update && apt-get install -y git wget libgl1 libglib2.0-0",

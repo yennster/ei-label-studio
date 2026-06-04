@@ -145,7 +145,10 @@ export async function POST(req: Request) {
   if (task.data) task.data.image = staged.url;
 
   const mlBackendUrl = process.env.SAM_BACKEND_URL || "http://localhost:8003/predict";
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    "Connection": "keep-alive"
+  };
   if (process.env.SAM_BACKEND_AUTH) headers["Authorization"] = process.env.SAM_BACKEND_AUTH;
 
   const callPredict = () =>
