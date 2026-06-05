@@ -8,6 +8,7 @@
 import { useEffect, useRef } from "react";
 import { LS_VENDOR_CSS, LS_VENDOR_JS } from "@/lib/ls-vendor";
 import type { LSTask } from "@/lib/types";
+import { getIframeQueryParams } from "@/lib/url-params";
 
 /*
  * Isolated Label Studio document, loaded inside an iframe by the workspace.
@@ -1142,7 +1143,7 @@ export default function LabelerEmbed() {
     }
 
     // Set the initial theme from query parameters on mount to avoid race conditions
-    const params = new URLSearchParams(window.location.search);
+    const params = getIframeQueryParams();
     const initialTheme = params.get("theme");
     if (initialTheme) {
       setTheme(initialTheme);

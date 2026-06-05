@@ -44,7 +44,7 @@ import { cn } from "@/lib/utils";
 import { useApp } from "@/lib/store";
 import { LS_VENDOR_CSS, LS_VENDOR_JS } from "@/lib/ls-vendor";
 import { getSamples, getProjects, relabel, setBoundingBoxes, getProjectMetadata } from "@/lib/ei-client";
-import { parsePreset } from "@/lib/url-params";
+import { parsePreset, getIframeQueryParams } from "@/lib/url-params";
 import { detectModality } from "@/lib/modality";
 import { defaultTaskFor, projectTypeLabel } from "@/lib/project-type";
 import { buildLabelConfig, channelsForSample } from "@/lib/ls-config";
@@ -145,7 +145,7 @@ export function Workspace() {
       return;
     }
     let cancelled = false;
-    const preset = parsePreset(window.location.search);
+    const preset = parsePreset(getIframeQueryParams());
     applyPreset(preset);
     if (preset.theme) setTheme(preset.theme);
     (async () => {

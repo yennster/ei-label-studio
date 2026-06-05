@@ -104,3 +104,30 @@ export function parsePreset(input: URLSearchParams | string): UrlPreset {
 
   return preset;
 }
+
+/**
+ * Resolves the query parameters for the current page, merging them with the
+ * parent window's query parameters if the page is loaded inside an iframe.
+ */
+export function getIframeQueryParams(): URLSearchParams {
+  if (typeof window === "undefined") {
+    return new URLSearchParams();
+  }
+
+  const params = new URLSearchParams(window.location.search);
+
+  if (window.self !== window.top) {
+    try {
+      if (window.parent && window.parent.location) {
+        const parentParams = new URLSearchParams(window.parent.location.search);
+        for (const [key, value] of parentParams.entries()) {
+          params.set(key, value);
+        }
+      }
+    } catch (e) {
+      // Ignore cross-origin DOMException when parent is on a different origin
+    }
+  }
+
+  return params;
+}

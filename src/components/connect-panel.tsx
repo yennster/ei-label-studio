@@ -19,7 +19,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { connect, disconnect, getProjects } from "@/lib/ei-client";
 import { labelingMethodLabel } from "@/lib/project-type";
-import { parsePreset } from "@/lib/url-params";
+import { parsePreset, getIframeQueryParams } from "@/lib/url-params";
 import { useApp } from "@/lib/store";
 import type { EIProject } from "@/lib/types";
 
@@ -39,7 +39,7 @@ export function ConnectPanel() {
 
   // Apply URL presets once and detect an existing session.
   useEffect(() => {
-    const preset = parsePreset(window.location.search);
+    const preset = parsePreset(getIframeQueryParams());
     applyPreset(preset);
     if (preset.apiKey) setApiKey(preset.apiKey);
     if (preset.projectId) setProjectId(String(preset.projectId));
