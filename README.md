@@ -7,6 +7,9 @@ back to Edge Impulse — all driven by shareable URLs.
 
 🔗 **Live:** https://label.jennyspeelman.dev
 
+![Edge Impulse Label Studio with Segment Anything annotation](docs/ei-label-studio.png)
+*Edge Impulse Label Studio with Segment Anything annotation*
+
 ## Features
 
 - **Connect with an API key** — paste a project API key (`ei_…`) + project ID. The key is kept
